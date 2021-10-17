@@ -1,0 +1,12 @@
+#cloud-config
+debug:
+  verbose: true
+users:
+  - name: debian
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    groups: sudo
+    shell: /bin/bash
+chpasswd:
+  list:
+    - debian:debian
+  expire: False

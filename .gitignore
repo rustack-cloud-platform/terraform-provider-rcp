@@ -1,0 +1,11 @@
+.vscode/
+NOTES.MD
+vendor/
+
+terraform.tfplan
+terraform.tfstate
+./*.tfstate
+*.terraform.lock.hcl
+.terraform/
+*.backup
+tfplugindocs
