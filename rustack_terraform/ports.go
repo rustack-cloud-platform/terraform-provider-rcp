@@ -13,6 +13,11 @@ func (args *Arguments) injectCreatePort() {
 			Computed:    true,
 			Description: "id of the Port",
 		},
+		"ip_address": {
+			Type:        schema.TypeString,
+			Computed:    true,
+			Description: "ip_address of the Port",
+		},
 		"firewall_templates": {
 			Type:        schema.TypeList,
 			Required:    true,

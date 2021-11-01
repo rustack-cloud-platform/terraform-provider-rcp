@@ -20,13 +20,11 @@ description: |-
 - **name** (String) name of the Vm
 - **vdc_id** (String) id of the VDC
 
-### Optional
-
-- **floating_ip** (String) enable floating ip for the Vm
-
 ### Read-Only
 
 - **cpu** (Number) the number of virtual cpus
+- **floating** (Boolean) enable floating ip for the Vm
+- **floating_ip** (String) floating_ip of the Vm. May be omitted
 - **id** (String) id of the VDC
 - **ram** (Number) memory of the Vm in gigabytes
 - **template_id** (String) id of the Template

@@ -27,7 +27,7 @@ func main() {
 	}
 
 	if debugMode {
-		err := plugin.Debug(context.Background(), "rustack/rustack", opts)
+		err := plugin.Debug(context.Background(), "pilat/rustack", opts)
 		if err != nil {
 			log.Fatal(err.Error())
 		}

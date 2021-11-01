@@ -33,6 +33,7 @@ description: |-
 Read-Only:
 
 - **cpu** (Number)
+- **floating** (Boolean)
 - **floating_ip** (String)
 - **id** (String)
 - **name** (String)

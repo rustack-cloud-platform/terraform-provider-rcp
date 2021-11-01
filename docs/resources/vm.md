@@ -28,9 +28,13 @@ description: |-
 
 ### Optional
 
-- **floating_ip** (Boolean) enable floating ip for the Vm
+- **floating** (Boolean) enable floating ip for the Vm
 - **id** (String) The ID of this resource.
 - **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
+
+### Read-Only
+
+- **floating_ip** (String) floating ip for the Vm. May be omitted
 
 <a id="nestedblock--disk"></a>
 ### Nested Schema for `disk`
@@ -57,6 +61,7 @@ Required:
 Read-Only:
 
 - **id** (String) id of the Port
+- **ip_address** (String) ip_address of the Port
 
 
 <a id="nestedblock--timeouts"></a>

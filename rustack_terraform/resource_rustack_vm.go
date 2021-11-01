@@ -84,7 +84,7 @@ func resourceRustackVmCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	var floatingIp *string = nil
-	if d.Get("floating_ip").(bool) {
+	if d.Get("floating").(bool) {
 		floatingIpStr := "RANDOM_FIP"
 		floatingIp = &floatingIpStr
 	}
@@ -140,10 +140,15 @@ func resourceRustackVmRead(ctx context.Context, d *schema.ResourceData, meta int
 			"id":                 port.ID,
 			"network_id":         port.Network.ID,
 			"firewall_templates": flattenFirewallTemplates,
+			"ip_address":         port.IpAddress,
 		}
 	}
 	d.Set("port", flattenPorts)
-	d.Set("floating_ip", vm.Floating != nil)
+	d.Set("floating", vm.Floating != nil)
+	d.Set("floating_ip", "")
+	if vm.Floating != nil {
+		d.Set("floating_ip", vm.Floating.IpAddress)
+	}
 
 	return nil
 }
@@ -182,15 +187,15 @@ func resourceRustackVmUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		needPowerOn = true
 	}
 
-	if d.HasChange("floating_ip") {
+	if d.HasChange("floating") {
 		needUpdate = true
-		if !d.Get("floating_ip").(bool) {
+		if !d.Get("floating").(bool) {
 			vm.Floating = nil
 		} else {
 			floatingIpStr := "RANDOM_FIP"
 			vm.Floating = &rustack.Port{IpAddress: &floatingIpStr}
 		}
-		d.Set("floating_ip", vm.Floating != nil)
+		d.Set("floating", vm.Floating != nil)
 	}
 
 	if needUpdate {

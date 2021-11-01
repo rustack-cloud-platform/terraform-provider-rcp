@@ -90,5 +90,5 @@ resource "rustack_vm" "vm1" {
         ]
     }
 
-    floating_ip = false
+    floating = false
 }

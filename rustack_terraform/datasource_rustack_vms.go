@@ -41,10 +41,12 @@ func dataSourceRustackVmsRead(ctx context.Context, d *schema.ResourceData, meta 
 			"ram":           vm.Ram,
 			"template_id":   vm.Template.ID,
 			"template_name": vm.Template.Name,
+			"floating":      nil,
 			"floating_ip":   nil,
 		}
 
 		if vm.Floating != nil {
+			flattenedRecords[i]["floating"] = true
 			flattenedRecords[i]["floating_ip"] = vm.Floating.IpAddress
 		}
 	}

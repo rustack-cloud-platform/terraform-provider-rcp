@@ -76,10 +76,16 @@ func (args *Arguments) injectCreateVm() {
 				Schema: portCreation,
 			},
 		},
-		"floating_ip": {
+		"floating": {
 			Type:        schema.TypeBool,
 			Optional:    true,
+			Default:     true,
 			Description: "enable floating ip for the Vm",
+		},
+		"floating_ip": {
+			Type:        schema.TypeString,
+			Computed:    true,
+			Description: "floating ip for the Vm. May be omitted",
 		},
 	})
 }
@@ -116,11 +122,15 @@ func (args *Arguments) injectResultVm() {
 			Computed:    true,
 			Description: "name of the Template",
 		},
+		"floating": {
+			Type:        schema.TypeBool,
+			Computed:    true,
+			Description: "enable floating ip for the Vm",
+		},
 		"floating_ip": {
 			Type:        schema.TypeString,
 			Computed:    true,
-			Optional:    true,
-			Description: "enable floating ip for the Vm",
+			Description: "floating_ip of the Vm. May be omitted",
 		},
 	})
 }
