@@ -3,7 +3,7 @@ terraform {
 
   required_providers {
     rustack = {
-      source  = "rustack/rustack"
+      source  = "pilat/rustack"
       version = "~> 0.1"
     }
   }
