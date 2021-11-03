@@ -239,8 +239,8 @@ github.com/nsf/jsondiff v0.0.0-20200515183724-f29ed568f4ce/go.mod h1:uFMI8w+ref4
 github.com/oklog/run v1.0.0 h1:Ru7dDtJNOyC66gQ5dQmaCa0qIsAUFY3sFpK1Xk8igrw=
 github.com/oklog/run v1.0.0/go.mod h1:dlhp/R75TPv97u0XWUtDeV/lRKWPKSdTuV0TZvrmrQA=
 github.com/pierrec/lz4 v2.0.5+incompatible/go.mod h1:pdkljMzZIN41W+lC3N2tnIh5sFi+IEE17M5jbnwPHcY=
-github.com/pilat/rustack-go v0.1.0 h1:vI0UJsdFngE8sV2TENEQq42SAdeilkK72UWphYyF32M=
-github.com/pilat/rustack-go v0.1.0/go.mod h1:Cz213jRP/BINg/O8lDwx3mOdE4I8pQrSmGbji6M1p5g=
+github.com/pilat/rustack-go v0.1.1 h1:dHifQ/ypSUR5ic58g/qxnonRX9gKJYUfDsWYbYDJ9PQ=
+github.com/pilat/rustack-go v0.1.1/go.mod h1:Cz213jRP/BINg/O8lDwx3mOdE4I8pQrSmGbji6M1p5g=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
