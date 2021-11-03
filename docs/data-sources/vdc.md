@@ -18,6 +18,9 @@ description: |-
 ### Required
 
 - **name** (String) name of the vdc
+
+### Optional
+
 - **project_id** (String) id of the Project
 
 ### Read-Only

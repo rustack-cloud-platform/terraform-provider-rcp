@@ -25,10 +25,10 @@ description: |-
 
 ### Read-Only
 
-- **firewall_templates** (List of Object) (see [below for nested schema](#nestedatt--firewall_templates))
+- **templates** (List of Object) (see [below for nested schema](#nestedatt--templates))
 
-<a id="nestedatt--firewall_templates"></a>
-### Nested Schema for `firewall_templates`
+<a id="nestedatt--templates"></a>
+### Nested Schema for `templates`
 
 Read-Only:
 

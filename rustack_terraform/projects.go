@@ -25,6 +25,16 @@ func (args *Arguments) injectContextProjectById() {
 	})
 }
 
+func (args *Arguments) injectContextProjectByIdOptional() {
+	args.merge(Arguments{
+		"project_id": {
+			Type:        schema.TypeString,
+			Description: "id of the Project",
+			Optional:    true,
+		},
+	})
+}
+
 func (args *Arguments) injectCreateProject() {
 	args.merge(Arguments{
 		"name": {

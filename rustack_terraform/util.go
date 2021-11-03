@@ -270,7 +270,7 @@ func GetVdcByName(d *schema.ResourceData, manager *rustack.Manager, project *rus
 	}
 
 	for _, vdc := range vdcs {
-		if vdc.Name == vdcName && vdc.Project.ID == project.ID {
+		if vdc.Name == vdcName && (project == nil || vdc.Project.ID == project.ID) {
 			return vdc, nil
 		}
 	}

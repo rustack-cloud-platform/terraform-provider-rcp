@@ -57,7 +57,7 @@ func (args *Arguments) injectResultListTemplate() {
 	s.injectResultTemplate()
 
 	args.merge(Arguments{
-		"firewall_templates": {
+		"templates": {
 			Type:     schema.TypeList,
 			Computed: true,
 			Elem: &schema.Resource{

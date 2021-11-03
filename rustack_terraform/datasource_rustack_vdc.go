@@ -5,12 +5,13 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/pilat/rustack-go/rustack"
 )
 
 func dataSourceRustackVdc() *schema.Resource {
 	args := Defaults()
 	args.injectResultVdc()
-	args.injectContextProjectById()
+	args.injectContextProjectByIdOptional()
 	args.injectContextVdcByName() // override name
 
 	return &schema.Resource{
@@ -21,9 +22,16 @@ func dataSourceRustackVdc() *schema.Resource {
 
 func dataSourceRustackVdcRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	manager := meta.(*CombinedConfig).rustackManager()
-	targetProject, err := GetProjectById(d, manager)
-	if err != nil {
-		return diag.Errorf("Error getting project: %s", err)
+
+	var targetProject *rustack.Project
+
+	if _, exists := d.GetOk("project_id"); exists {
+		project, err := GetProjectById(d, manager)
+		if err != nil {
+			return diag.Errorf("Error getting project: %s", err)
+		}
+
+		targetProject = project
 	}
 
 	targetVdc, err := GetVdcByName(d, manager, targetProject)
@@ -32,13 +40,10 @@ func dataSourceRustackVdcRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	flattenedVdc := map[string]interface{}{
-		"id": targetVdc.ID,
-		// "vdc":             targetVdc.Name,  // ??
-		// "vdc":             nil,
+		"id":              targetVdc.ID,
 		"name":            targetVdc.Name,
 		"hypervisor":      targetVdc.Hypervisor.Name,
 		"hypervisor_type": targetVdc.Hypervisor.Type,
-		// "project":         targetVdc.Project.Name,
 	}
 
 	if err := setResourceDataFromMap(d, flattenedVdc); err != nil {
