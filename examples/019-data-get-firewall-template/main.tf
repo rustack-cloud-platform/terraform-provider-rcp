@@ -24,5 +24,5 @@ data "rustack_vdc" "single_vdc" {
 
 data "rustack_firewall_template" "single_template" {
     vdc_id = data.rustack_vdc.single_vdc.id
-    name = "РазреШИТЬ Web"
+    name = "Разрешить Web"
 }
