@@ -95,7 +95,7 @@ func (args *Arguments) injectResultVm() {
 		"id": {
 			Type:        schema.TypeString,
 			Computed:    true,
-			Description: "id of the VDC",
+			Description: "id of the Vm",
 		},
 		"name": {
 			Type:        schema.TypeString,
