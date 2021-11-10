@@ -24,7 +24,4 @@ data "rustack_vdc" "single_vdc" {
 
 data "rustack_storage_profiles" "all_storage_profiles" {
     vdc_id = data.rustack_vdc.single_vdc.id
-    # vdc_name = "Terraform VDC"
-    # vdc_id = "e76abe25-2e02-4652-b8b8-39531be04c63"
 }
-
