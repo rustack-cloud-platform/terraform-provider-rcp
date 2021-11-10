@@ -12,7 +12,7 @@ import (
 func dataSourceRustackFirewallTemplates() *schema.Resource {
 	args := Defaults()
 	args.injectContextVdcById()
-	args.injectResultListTemplate()
+	args.injectResultListFirewallTemplate()
 
 	return &schema.Resource{
 		ReadContext: dataSourceRustackFirewallTemplatesRead,

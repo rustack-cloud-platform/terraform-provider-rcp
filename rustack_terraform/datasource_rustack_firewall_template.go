@@ -9,9 +9,9 @@ import (
 
 func dataSourceRustackFirewallTemplate() *schema.Resource {
 	args := Defaults()
-	args.injectResultTemplate()
+	args.injectResultFirewallTemplate()
 	args.injectContextVdcById()
-	args.injectContextTemplateByName() // override name
+	args.injectContextFirewallTemplateByName() // override name
 
 	return &schema.Resource{
 		ReadContext: dataSourceRustackFirewallTemplateRead,
@@ -26,20 +26,20 @@ func dataSourceRustackFirewallTemplateRead(ctx context.Context, d *schema.Resour
 		return diag.Errorf("Error getting vdc: %s", err)
 	}
 
-	targetTemplate, err := GetFirewallTemplateByName(d, manager, targetVdc)
+	targetFirewallTemplate, err := GetFirewallTemplateByName(d, manager, targetVdc)
 	if err != nil {
 		return diag.Errorf("Error getting template: %s", err)
 	}
 
 	flatten := map[string]interface{}{
-		"id":   targetTemplate.ID,
-		"name": targetTemplate.Name,
+		"id":   targetFirewallTemplate.ID,
+		"name": targetFirewallTemplate.Name,
 	}
 
 	if err := setResourceDataFromMap(d, flatten); err != nil {
 		return diag.FromErr(err)
 	}
 
-	d.SetId(targetTemplate.ID)
+	d.SetId(targetFirewallTemplate.ID)
 	return nil
 }
