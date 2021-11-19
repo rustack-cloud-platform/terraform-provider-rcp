@@ -31,6 +31,15 @@ func dataSourceRustackFirewallTemplateRead(ctx context.Context, d *schema.Resour
 		return diag.Errorf("Error getting template: %s", err)
 	}
 
+	firewallRules, err := manager.GetFirewallRules(targetFirewallTemplate.ID)
+	if err != nil {
+		return diag.Errorf("Error getting Firewall Rule: %s", err)
+	}
+
+	rules := rulesToMap(firewallRules)
+	d.Set("ingress_rule", rules["ingress"])
+	d.Set("egress_rule", rules["egress"])
+
 	flatten := map[string]interface{}{
 		"id":   targetFirewallTemplate.ID,
 		"name": targetFirewallTemplate.Name,

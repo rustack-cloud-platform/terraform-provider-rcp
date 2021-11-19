@@ -33,10 +33,20 @@ func dataSourceRustackFirewallTemplatesRead(ctx context.Context, d *schema.Resou
 	}
 
 	flattenedRecords := make([]map[string]interface{}, len(allFirewallTemplates))
+
 	for i, firewallTemplate := range allFirewallTemplates {
+
+		firewallRules, err := manager.GetFirewallRules(firewallTemplate.ID)
+		if err != nil {
+			return diag.Errorf("Error getting Firewall Rule: %s", err)
+		}
+		rules := rulesToMap(firewallRules)
+
 		flattenedRecords[i] = map[string]interface{}{
 			"id":   firewallTemplate.ID,
 			"name": firewallTemplate.Name,
+			"ingress_rule": rules["ingress"],
+			"egress_rule":  rules["egress"],
 		}
 	}
 

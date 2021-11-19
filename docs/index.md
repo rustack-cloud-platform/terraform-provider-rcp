@@ -1,5 +1,5 @@
 ---
-page_title: "rustack Provider"
+page_title: "Rustack Provider"
 ---
 # rustack Provider
 
@@ -21,7 +21,7 @@ terraform {
 }
 
 # Set the variable value in *.tfvars file
-# or using -var="do_token=..." CLI option
+# or using -var="rustack_token=..." CLI option
 variable "rustack_token" {}
 
 # Configure the Rustack Provider

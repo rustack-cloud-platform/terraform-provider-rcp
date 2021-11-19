@@ -58,11 +58,9 @@ data "rustack_firewall_template" "allow_ssh" {
 }
 
 resource "rustack_vm" "vm1" {
-    count = 2
-
     vdc_id = data.rustack_vdc.single_vdc.id
 
-    name = format("Сервер %s", count.index + 1)
+    name = "Сервер 1"
     cpu = 2
     ram = 4
 
@@ -75,12 +73,6 @@ resource "rustack_vm" "vm1" {
         size = 10
         storage_profile_id = data.rustack_storage_profile.ssd.id
     }
-
-    # disk {
-    #     name = "Диск 2"
-    #     size = 1
-    #     storage_profile_id = data.rustack_storage_profile.sas.id
-    # }
 
     port {
         network_id = data.rustack_network.service_network.id

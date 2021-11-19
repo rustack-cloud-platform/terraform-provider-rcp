@@ -18,18 +18,16 @@ data "rustack_vdc" "single_vdc" {
 }
 
 resource "rustack_network" "network2" {
-    count = 1
-
     vdc_id = data.rustack_vdc.single_vdc.id
 
-    name = format("Сеть %s", count.index + 1)
+    name = "Network 1"
 
     subnets {
-        cidr = format("10.20.%s.0/24", (count.index + 3) * 10)
+        cidr = "10.20.1.0/24
         dhcp = true
-        gateway = format("10.20.%s.1", (count.index + 3) * 10)
-        start_ip = format("10.20.%s.2", (count.index + 3) * 10)
-        end_ip = format("10.20.%s.254", (count.index + 3) * 10)
+        gateway = "10.20.1.1"
+        start_ip = "10.20.1.2"
+        end_ip = "10.20.1.254"
         dns = ["8.8.8.8", "8.8.4.4", "1.1.1.1"]
     }
 }

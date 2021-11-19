@@ -50,9 +50,9 @@ func resourceRustackNetworkCreate(ctx context.Context, d *schema.ResourceData, m
 
 		// Create subnet
 		subnet := rustack.NewSubnet(subnetInfo2["cidr"].(string), subnetInfo2["gateway"].(string), subnetInfo2["start_ip"].(string), subnetInfo2["end_ip"].(string), subnetInfo2["dhcp"].(bool))
-		err = network.CreateSubnet(&subnet)
-		if err != nil {
-			return diag.Errorf("Error creating subnet")
+
+		if err = network.CreateSubnet(&subnet); err != nil {
+			return diag.Errorf("Error creating subnet: %s", err)
 		}
 
 		dnsServersList := subnetInfo2["dns"].([]interface{})
@@ -62,7 +62,11 @@ func resourceRustackNetworkCreate(ctx context.Context, d *schema.ResourceData, m
 			dnsServers[i] = &s1
 		}
 
-		subnet.UpdateDNSServers(dnsServers)
+		if err = subnet.UpdateDNSServers(dnsServers); err != nil {
+			return diag.Errorf("Error creating subnet: %s", err)
+		}
+
+		// TODO: Add NewSubnetRoute
 	}
 
 	d.SetId(network.ID)
@@ -77,9 +81,6 @@ func resourceRustackNetworkRead(ctx context.Context, d *schema.ResourceData, met
 	if err != nil {
 		return diag.Errorf("Error getting network: %s", err)
 	}
-
-	d.SetId(network.ID)
-	d.Set("name", network.Name)
 
 	subnets, err := network.GetSubnets()
 	if err != nil {
