@@ -55,7 +55,7 @@ data "rustack_firewall_template" "allow_ssh" {
 resource "rustack_vm" "vm1" {
     vdc_id = data.rustack_vdc.single_vdc.id
 
-    name = format("Server 1")
+    name = "Server 1"
     cpu = 2
     ram = 4
 
@@ -130,10 +130,6 @@ Read-Only:
 
 - **id** (String) id of the Port
 - **ip_address** (String) ip_address of the Port
-
-
-<a id="nestedblock--timeouts"></a>
-### Nested Schema for `timeouts`
 
 Optional:
 

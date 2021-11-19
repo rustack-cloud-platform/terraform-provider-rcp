@@ -46,7 +46,6 @@ func GetFirewallTemplateById(d *schema.ResourceData, manager *rustack.Manager, v
 	}
 
 	return firewallTemplate, nil
-
 }
 
 func GetTemplateByName(d *schema.ResourceData, manager *rustack.Manager, vdc *rustack.Vdc) (*rustack.Template, error) {
@@ -104,8 +103,6 @@ func GetDiskById(d *schema.ResourceData, manager *rustack.Manager) (*rustack.Dis
 	}
 
 	return disk, nil
-
-	return nil, fmt.Errorf("There are not either 'disk_name' or 'disk_id'")
 }
 
 func GetStorageProfileById(d *schema.ResourceData, manager *rustack.Manager, vdc *rustack.Vdc, prefix *string) (*rustack.StorageProfile, error) {

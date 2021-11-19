@@ -24,11 +24,9 @@ data "rustack_storage_profile" "single_storage_profile" {
 }
 
 resource "rustack_disk" "disk2" {
-    count = 3
-
     vdc_id = data.rustack_vdc.single_vdc.id
 
-    name = format("Диск %s", count.index + 1)
+    name = "Disk 1"
     storage_profile_id = data.rustack_storage_profile.single_storage_profile.id
     size = 1
 }
@@ -50,9 +48,6 @@ resource "rustack_disk" "disk2" {
 ### Read-Only
 
 - **id** (String) id of the Disk
-
-<a id="nestedblock--timeouts"></a>
-### Nested Schema for `timeouts`
 
 Optional:
 

@@ -44,11 +44,12 @@ func Provider() *schema.Provider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"rustack_project": resourceRustackProject(), // 001-resource-create-project +
-			"rustack_vdc":     resourceRustackVdc(),     // 006-resource-create-vdc +
-			"rustack_network": resourceRustackNetwork(), // 009-resource-create-network +
-			"rustack_disk":    resourceRustackDisk(),    // 014-resource-create-disk +
-			"rustack_vm":      resourceRustackVm(),      // 021-resource-create-vm +
+			"rustack_project":           resourceRustackProject(),          // 001-resource-create-project +
+			"rustack_vdc":               resourceRustackVdc(),              // 006-resource-create-vdc +
+			"rustack_network":           resourceRustackNetwork(),          // 009-resource-create-network +
+			"rustack_disk":              resourceRustackDisk(),             // 014-resource-create-disk +
+			"rustack_vm":                resourceRustackVm(),               // 021-resource-create-vm +
+			"rustack_firewall_template": resourceRustackFirewallTemplate(), // 024-resource-create-firewall-template +
 		},
 	}
 

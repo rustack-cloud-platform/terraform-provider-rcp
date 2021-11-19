@@ -101,17 +101,15 @@ data "template_file" "cloud_init_node" {
 
 
 resource "rustack_vm" "vm_node" {
-    count = var.nodes_count
-
     vdc_id = rustack_vdc.vdc1.id
 
-    name = format("Host %s", count.index)
+    name = "Host 1"
     cpu = 2
     ram = 4
 
     template_id = data.rustack_template.debian10.id
 
-    user_data = "${element(data.template_file.cloud_init_node.*.rendered, count.index)}" 
+    user_data = "${element(data.template_file.cloud_init_node.*.rendered, 1)}" 
 
     disk {
         name = "Root disk"
