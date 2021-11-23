@@ -265,8 +265,8 @@ func createPort(d *schema.ResourceData, manager *rustack.Manager, portPrefix *st
 	firewallsCount := d.Get(MakePrefix(portPrefix, "firewall_templates.#")).(int)
 	firewalls := make([]*rustack.FirewallTemplate, firewallsCount)
 	for j := 0; j < firewallsCount; j++ {
-		MakePrefix(portPrefix, fmt.Sprintf("firewall_templates.%d", j))
-		portFirewall, err := GetFirewallTemplateById(d, manager, vdc, portPrefix)
+		firewallName := MakePrefix(portPrefix, fmt.Sprintf("firewall_templates.%d", j))
+		portFirewall, err := GetFirewallTemplateById(d, manager, vdc, &firewallName)
 		if err != nil {
 			return nil, err
 		}
