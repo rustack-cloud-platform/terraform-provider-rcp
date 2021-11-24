@@ -2,11 +2,10 @@ package rustack_terraform
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"reflect"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/pilat/rustack-go/rustack"
@@ -163,40 +162,36 @@ func updateRules(d *schema.ResourceData, firewallTemplate rustack.FirewallTempla
 		if ruleId == "" {
 			continue
 		}
-		firewallRule, err := firewallTemplate.GetRuleById(ruleId)
+		rule, err := firewallTemplate.GetRuleById(ruleId)
 		if err != nil {
 			return err
 		}
-		firewallRule.Name = toUpdate[i].(map[string]interface{})["name"].(string)
-		firewallRule.Protocol = toUpdate[i].(map[string]interface{})["protocol"].(string)
-		firewallRule.DestinationIp = toUpdate[i].(map[string]interface{})["destination_ip"].(string)
+		rule.Name = toUpdate[i].(map[string]interface{})["name"].(string)
+		rule.Protocol = toUpdate[i].(map[string]interface{})["protocol"].(string)
+		rule.DestinationIp = toUpdate[i].(map[string]interface{})["destination_ip"].(string)
 		portRange := toUpdate[i].(map[string]interface{})["port_range"].(string)
-		var portRangeMax, portRangeMin int
-		if portRange == "" {
-			firewallRule.DstPortRangeMin = nil
-			firewallRule.DstPortRangeMax = nil
-		} else if strings.Contains(portRange, ":") {
-			portRangeList := strings.Split(portRange, ":")
-			portRangeMin, err = strconv.Atoi(portRangeList[0])
+		rule.DstPortRangeMin = nil
+		rule.DstPortRangeMax = nil
+
+		// Scan port_range and split it to min and max values
+		var portMin, portMax int
+		_, err = fmt.Sscanf(portRange, "%d:%d", &portMin, &portMax)
+		switch {
+		case portRange == "":
+		case err != nil:
+			_, err = fmt.Sscanf(portRange, "%d", &portMin)
 			if err != nil {
-				return err
+				return errors.New("PORT RANGE UNSUPPORTED FORMAT, " +
+					"should be `val:val` or `val`")
 			}
-			portRangeMax, err = strconv.Atoi(portRangeList[1])
-			if err != nil {
-				return err
-			}
-			firewallRule.DstPortRangeMin = &portRangeMin
-			firewallRule.DstPortRangeMax = &portRangeMax
-		} else {
-			portRangeMax, err = strconv.Atoi(portRange)
-			if err != nil {
-				return err
-			}
-			firewallRule.DstPortRangeMin = nil
-			firewallRule.DstPortRangeMax = &portRangeMax
+			rule.DstPortRangeMin = &portMin
+		default:
+			rule.DstPortRangeMin = &portMin
+			rule.DstPortRangeMax = &portMax
 		}
 
-		if err = firewallRule.Update(); err != nil {
+		// Update firewall rule by put request
+		if err = rule.Update(); err != nil {
 			return err
 		}
 	}
@@ -246,24 +241,32 @@ func resourceRustackFirewallTemplateDelete(ctx context.Context, d *schema.Resour
 func setUpRule(rule *rustack.FirewallRule, d *schema.ResourceData) (err error) {
 	rule.Protocol = d.Get(fmt.Sprintf("%s.protocol", rule.Name)).(string)
 	rule.DestinationIp = d.Get(fmt.Sprintf("%s.destination_ip", rule.Name)).(string)
+	rule.DstPortRangeMax = nil
+	rule.DstPortRangeMin = nil
+	portRange := d.Get(fmt.Sprintf("%s.port_range", rule.Name)).(string)
+
 	if rule.Protocol == "icmp" {
-		rule.DstPortRangeMax = nil
-		rule.DstPortRangeMin = nil
-	} else {
-		// Two ways to set up port range
-		// 1:40 - port range from min to max
-		// 50 - single port
-		portRange := d.Get(fmt.Sprintf("%s.port_range", rule.Name)).(string)
-		var a, b int
-		_, err := fmt.Sscanf(portRange, "%d:%d", &a, &b)
-		if err != nil {
-			_, err = fmt.Sscanf(portRange, "%d", &a)
-			rule.DstPortRangeMax = nil
-		} else {
-			rule.DstPortRangeMax = &b
-		}
-		rule.DstPortRangeMin = &a
+		return
 	}
+	if portRange == "" {
+		return
+	}
+
+	// Two ways to set up port range
+	// 1:40 - port range from min to max
+	// 50 - single port
+	var a, b int
+	_, err = fmt.Sscanf(portRange, "%d:%d", &a, &b)
+	if err != nil {
+		_, err = fmt.Sscanf(portRange, "%d", &a)
+		if err != nil {
+			return errors.New("PORT RANGE UNSUPPORTED FORMAT, " +
+				"should be `val:val` or `val`")
+		}
+	} else {
+		rule.DstPortRangeMax = &b
+	}
+	rule.DstPortRangeMin = &a
 
 	return
 }

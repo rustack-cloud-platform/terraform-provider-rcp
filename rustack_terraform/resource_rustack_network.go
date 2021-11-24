@@ -39,9 +39,8 @@ func resourceRustackNetworkCreate(ctx context.Context, d *schema.ResourceData, m
 	log.Printf("[DEBUG] subnetInfo: %#v", targetVdc)
 	network := rustack.NewNetwork(d.Get("name").(string))
 
-	err = targetVdc.CreateNetwork(&network)
-	if err != nil {
-		return diag.Errorf("Error creating network")
+	if err = targetVdc.CreateNetwork(&network); err != nil {
+		return diag.Errorf("Error creating network: %s", err)
 	}
 
 	for _, subnetInfo := range subnets {
@@ -66,7 +65,7 @@ func resourceRustackNetworkCreate(ctx context.Context, d *schema.ResourceData, m
 			return diag.Errorf("Error creating subnet: %s", err)
 		}
 
-		// TODO: Add NewSubnetRoute
+		// TODO: Add Subnet Routes
 	}
 
 	d.SetId(network.ID)
