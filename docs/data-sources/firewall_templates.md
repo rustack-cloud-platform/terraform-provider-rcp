@@ -17,7 +17,7 @@ data "rustack_project" "single_project" {
 }
 
 data "rustack_vdc" "single_vdc" {
-    project_id = "${data.rustack_project.single_project.id}"
+    project_id = data.rustack_project.single_project.id
     name = "Terraform VDC"
 }
 
@@ -34,7 +34,7 @@ data "rustack_firewall_templates" "single_template" {
 
 ### Read-Only
 
-- **templates** (List of Object) (see [below for nested schema](#nestedatt--templates))
+- **firewall_templates** (List of Object) (see [below for nested schema](#nestedatt--templates))
 
 <a id="nestedatt--templates"></a>
 ### Nested Schema for `templates`
@@ -42,9 +42,16 @@ data "rustack_firewall_templates" "single_template" {
 Read-Only:
 
 - **id** (String)
-- **min_cpu** (Number)
-- **min_disk** (Number)
-- **min_ram** (Number)
 - **name** (String)
-
-
+- **egress_rule** (List)
+    **id** (String)
+    **name** (String)
+    **protocol** (String)
+    **port_range** (String)
+    **destination_ip** (String)
+- **ingress_rule** (List)
+    **id** (String)
+    **name** (String)
+    **protocol** (String)
+    **port_range** (String)
+    **destination_ip** (String)

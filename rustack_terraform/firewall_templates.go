@@ -26,10 +26,10 @@ func (args *Arguments) injectContextFirewallTemplateByName() {
 }
 
 func (args *Arguments) injectResultFirewallTemplate() {
-	ingress_rule := Defaults()
-	ingress_rule.injectCreateFirewallRule()
-	egress_rule := Defaults()
-	egress_rule.injectCreateFirewallRule()
+	ingressRule := Defaults()
+	ingressRule.injectCreateFirewallRule()
+	egressRule := Defaults()
+	egressRule.injectCreateFirewallRule()
 
 	args.merge(Arguments{
 		"id": {
@@ -50,7 +50,7 @@ func (args *Arguments) injectResultFirewallTemplate() {
 			MaxItems:    20,
 			Description: "list of ingress rules",
 			Elem: &schema.Resource{
-				Schema: ingress_rule,
+				Schema: ingressRule,
 			},
 		},
 		"egress_rule": {
@@ -61,7 +61,7 @@ func (args *Arguments) injectResultFirewallTemplate() {
 			MaxItems:    20,
 			Description: "list of egress rules",
 			Elem: &schema.Resource{
-				Schema: egress_rule,
+				Schema: egressRule,
 			},
 		},
 	})
@@ -83,10 +83,10 @@ func (args *Arguments) injectResultListFirewallTemplate() {
 }
 
 func (args *Arguments) injectCreateFirewallTemplate() {
-	ingress_rule := Defaults()
-	ingress_rule.injectCreateFirewallRule()
-	egress_rule := Defaults()
-	egress_rule.injectCreateFirewallRule()
+	ingressRule := Defaults()
+	ingressRule.injectCreateFirewallRule()
+	egressRule := Defaults()
+	egressRule.injectCreateFirewallRule()
 
 	args.merge(Arguments{
 		"id": {
@@ -111,7 +111,7 @@ func (args *Arguments) injectCreateFirewallTemplate() {
 			MaxItems:    20,
 			Description: "list of ingress rules",
 			Elem: &schema.Resource{
-				Schema: ingress_rule,
+				Schema: ingressRule,
 			},
 		},
 		"egress_rule": {
@@ -119,10 +119,10 @@ func (args *Arguments) injectCreateFirewallTemplate() {
 			Optional: true,
 			// TODO: setup limits
 			MinItems:    0,
-			MaxItems:    10,
+			MaxItems:    20,
 			Description: "list of egress rules",
 			Elem: &schema.Resource{
-				Schema: egress_rule,
+				Schema: egressRule,
 			},
 		},
 	})

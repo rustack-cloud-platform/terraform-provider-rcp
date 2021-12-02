@@ -10,7 +10,6 @@ func (args *Arguments) injectContextNetworkById() {
 		"network_id": {
 			Type:        schema.TypeString,
 			Required:    true,
-			ForceNew:    true,
 			Description: "id of the Network",
 		},
 	})

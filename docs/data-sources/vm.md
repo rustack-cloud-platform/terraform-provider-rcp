@@ -18,7 +18,7 @@ data "rustack_project" "single_project" {
 }
 
 data "rustack_vdc" "single_vdc" {
-    project_id = "${data.rustack_project.single_project.id}"
+    project_id = data.rustack_project.single_project.id
     name = "Terraform VDC"
 }
 
@@ -45,3 +45,9 @@ data "rustack_vm" "single_vm" {
 - **ram** (Number) memory of the Vm in gigabytes
 - **template_id** (String) id of the Template
 - **template_name** (String) name of the Template
+- **system_disk_id** (String) System disk id
+- **disks** (List) Additional disks
+**id** (String)
+**size** (Number) the size of the Disk in gigabytes
+**vdc_id** (String) id of the VDC
+**storage_profile_id** (String) the id of the StorageProfile

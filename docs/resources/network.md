@@ -13,7 +13,7 @@ data "rustack_project" "single_project" {
 }
 
 data "rustack_vdc" "single_vdc" {
-    project_id = "${data.rustack_project.single_project.id}"
+    project_id = data.rustack_project.single_project.id
     name = "Terraform VDC"
 }
 
@@ -23,7 +23,7 @@ resource "rustack_network" "network2" {
     name = "Network 1"
 
     subnets {
-        cidr = "10.20.1.0/24
+        cidr = "10.20.1.0/24"
         dhcp = true
         gateway = "10.20.1.1"
         start_ip = "10.20.1.2"

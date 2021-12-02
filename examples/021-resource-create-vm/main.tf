@@ -18,7 +18,7 @@ data "rustack_project" "single_project" {
 }
 
 data "rustack_vdc" "single_vdc" {
-    project_id = "${data.rustack_project.single_project.id}"
+    project_id = data.rustack_project.single_project.id
     name = "Terraform VDC"
 }
 
@@ -57,6 +57,16 @@ data "rustack_firewall_template" "allow_ssh" {
     name = "Разрешить SSH"
 }
 
+data "rustack_disk" "new_disk1" {
+    vdc_id = data.rustack_vdc.single_vdc.id
+    name = "Disk 1"
+}
+
+data "rustack_disk" "new_disk2" {
+    vdc_id = data.rustack_vdc.single_vdc.id
+    name = "Disk 2"
+}
+
 resource "rustack_vm" "vm1" {
     vdc_id = data.rustack_vdc.single_vdc.id
 
@@ -68,17 +78,18 @@ resource "rustack_vm" "vm1" {
 
     user_data = "${file("user_data.yaml")}"
 
-    disk {
-        name = "Загрузочный диск"
-        size = 10
-        storage_profile_id = data.rustack_storage_profile.ssd.id
-    }
+    sysdisk = "1-ssd"
+    
+    disks = [
+        data.rustack_disk.new_disk1,
+        data.rustack_disk.new_disk2,
+    ]
 
     port {
         network_id = data.rustack_network.service_network.id
-        firewall_templates = ["${data.rustack_firewall_template.allow_default.id}",
-            "${data.rustack_firewall_template.allow_web.id}",
-            "${data.rustack_firewall_template.allow_ssh.id}"
+        firewall_templates = [data.rustack_firewall_template.allow_default.id,
+            data.rustack_firewall_template.allow_web.id,
+            data.rustack_firewall_template.allow_ssh.id
         ]
     }
 

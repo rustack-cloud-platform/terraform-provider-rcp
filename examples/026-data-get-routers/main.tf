@@ -22,7 +22,6 @@ data "rustack_vdc" "single_vdc" {
   name       = "Terraform VDC"
 }
 
-data "rustack_firewall_template" "single_template" {
-  vdc_id = data.rustack_vdc.single_vdc.id
-  name   = "Разрешить Web"
+data "rustack_routers" "vdc_routers" {
+  vdc_id = rustack_vdc.single_vdc.id
 }

@@ -17,7 +17,7 @@ data "rustack_project" "single_project" {
 }
 
 data "rustack_vdcs" "all_vdcs" {
-    project_id = "${data.rustack_project.single_project.id}"
+    project_id = data.rustack_project.single_project.id
 }
 
 ```

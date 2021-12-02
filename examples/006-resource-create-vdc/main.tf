@@ -24,6 +24,6 @@ data "rustack_hypervisor" "single_hypervisor" {
 
 resource "rustack_vdc" "vdc1" {
     name = "Terraform VDC"
-    project_id = "${data.rustack_project.single_project.id}"
+    project_id = data.rustack_project.single_project.id
     hypervisor_id = data.rustack_hypervisor.single_hypervisor.id
 }

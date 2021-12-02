@@ -14,7 +14,7 @@ data "rustack_project" "single_project" {
 }
 
 data "rustack_vdc" "single_vdc" {
-    project_id = "${data.rustack_project.single_project.id}"
+    project_id = data.rustack_project.single_project.id
     name = "Terraform VDC"
 }
 
@@ -34,6 +34,15 @@ data "rustack_firewall_template" "single_template" {
 ### Read-Only
 
 - **id** (String) id of the Template
-- **min_cpu** (Number) minimum cpu required by the Template
-- **min_disk** (Number) minimum disk size in GB required by the Template
-- **min_ram** (Number) minimum ram in GB required by the Template
+- **egress_rule** (String)
+    **id** (String)
+    **name** (String)
+    **protocol** (String)
+    **port_range** (String)
+    **destination_ip** (String)
+- **ingress_rule** (String)
+    **id** (String)
+    **name** (String)
+    **protocol** (String)
+    **port_range** (String)
+    **destination_ip** (String)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -53,19 +54,41 @@ func resourceRustackVmCreate(ctx context.Context, d *schema.ResourceData, meta i
 	log.Printf("Vm details: name=%s, cpu: %d, ram: %d, user_data: %s, template name: %s",
 		vmName, cpu, ram, userData, template.Name)
 
-	disksCount := d.Get("disk.#").(int)
-	disks := make([]*rustack.Disk, disksCount)
-	for i := 0; i < disksCount; i++ {
-		diskPrefix := fmt.Sprintf("disk.%d", i)
-		newDisk, err := createDisk(d, manager, &diskPrefix)
-		if err != nil {
-			return diag.FromErr(err)
+	// System disk creation
+	systemDiskArgs := d.Get("system_disk").(string)
+	var diskSize int
+	var diskStorageProfile string
+	_, err = fmt.Sscanf(systemDiskArgs, "%d-%s", &diskSize, &diskStorageProfile)
+	if err != nil {
+		return diag.Errorf("ERROR. Wrong system disk format: %s", err)
+	}
+	profiles, err := targetVdc.GetStorageProfiles()
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	var storageProfile *rustack.StorageProfile
+	for _, profile := range profiles {
+		if strings.ToLower(profile.Name) == strings.ToLower(diskStorageProfile) {
+			storageProfile = profile
 		}
+	}
+	if storageProfile == nil {
+		return diag.Errorf("ERROR. storage profile %s not found", diskStorageProfile)
+	}
 
-		disks[i] = newDisk
+	var systemDisk []*rustack.Disk
+	newDisk := rustack.NewDisk("System", diskSize, storageProfile)
+	systemDisk = append(systemDisk, &newDisk)
 
-		log.Printf("Create disk with storage profile '%s' name '%s' size '%d\n",
-			newDisk.StorageProfile.Name, newDisk.Name, newDisk.Size)
+	// Join additional disk
+	disksIds := d.Get("disks").(*schema.Set).List()
+	var disks []*rustack.Disk
+	for _, diskId := range disksIds {
+		disk, err := manager.GetDisk(diskId.(string))
+		if err != nil {
+			return diag.Errorf("ERROR. Disk not found: %s", err)
+		}
+		disks = append(disks, disk)
 	}
 
 	portsCount := d.Get("port.#").(int)
@@ -89,12 +112,15 @@ func resourceRustackVmCreate(ctx context.Context, d *schema.ResourceData, meta i
 		floatingIp = &floatingIpStr
 	}
 
-	newVm := rustack.NewVm(vmName, cpu, ram, template, nil, &userData, ports, disks, floatingIp)
+	newVm := rustack.NewVm(vmName, cpu, ram, template, nil, &userData, ports, systemDisk, floatingIp)
 
 	err = targetVdc.CreateVm(&newVm)
 	if err != nil {
 		return diag.Errorf("Error creating vm: %s", err)
 	}
+	d.Set("system_disk_id", newVm.Disks[0].ID)
+
+	syncDisks(d, manager, targetVdc, &newVm)
 
 	d.SetId(newVm.ID)
 	log.Printf("[INFO] VM created, ID: %s", d.Id())
@@ -279,110 +305,74 @@ func createPort(d *schema.ResourceData, manager *rustack.Manager, portPrefix *st
 }
 
 func syncDisks(d *schema.ResourceData, manager *rustack.Manager, vdc *rustack.Vdc, vm *rustack.Vm) diag.Diagnostics {
-	disksCount := d.Get("disk.#").(int)
+	disksIds := d.Get("disks").(*schema.Set).List()
+
+	disksIds = append(disksIds, d.Get("system_disk_id").(string))
 
 	// Which disks are present on vm and not mentioned in the state?
+	// Detach disks
 	needReload := false
-	for _, disk := range vm.Disks {
+	for _, vmDisk := range vm.Disks {
 		found := false
-		for i := 0; i < disksCount; i++ {
-			diskPrefix := fmt.Sprintf("disk.%d", i)
-			diskId := d.Get(MakePrefix(&diskPrefix, "id"))
-			if diskId == disk.ID {
+		for _, diskId := range disksIds {
+			if diskId.(string) == vmDisk.ID {
 				found = true
 				break
 			}
 		}
 
 		if !found {
-			log.Printf("Disk %s found on vm and not mentioned in the state. Disk will be detached", disk.ID)
-			vm.DetachDisk(disk)
-			disk.Delete()
+			log.Printf("Disk %s found on vm and not mentioned in the state."+
+				" Disk will be detached", vmDisk.ID)
+			vm.WaitLock()
+			vm.DetachDisk(vmDisk)
 			needReload = true
 		}
+	}
+
+	// List disks to join
+	for _, diskId := range disksIds {
+		found := false
+		for _, vmDisk := range vm.Disks {
+			if diskId.(string) == vmDisk.ID {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			disk, err := manager.GetDisk(diskId.(string))
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			log.Printf("Disk `%s` will be Attached", disk.ID)
+			vm.WaitLock()
+			if err = vm.AttachDisk(disk); err != nil {
+				return diag.Errorf("ERROR. Cannot attach disk `%s`: %s", disk.ID, err)
+			}
+			needReload = true
+		}
+	}
+
+	// System disk resize
+	if d.HasChange("system_disk") {
+		systemDiskArgs := d.Get("system_disk").(string)
+		var diskSize int
+		var diskStorageProfile string
+		_, err := fmt.Sscanf(systemDiskArgs, "%d-%s", &diskSize, &diskStorageProfile)
+		if err != nil {
+			return diag.Errorf("ERROR. Wrong system disk format: %s", err)
+		}
+		systemDisk, err := manager.GetDisk(d.Get("system_disk_id").(string))
+		if err != nil {
+			return diag.Errorf("ERROR. Wrong system disk id: %s", err)
+		}
+		systemDisk.Resize(diskSize)
 	}
 
 	if needReload {
 		if err := vm.Reload(); err != nil {
 			return diag.FromErr(err)
-		}
-	}
-
-	// Which disks are present in state and not in vm?
-	for i := 0; i < disksCount; i++ {
-		diskPrefix := fmt.Sprintf("disk.%d", i)
-		diskId := d.Get(MakePrefix(&diskPrefix, "id"))
-
-		found := false
-		for _, disk := range vm.Disks {
-			if disk.ID == diskId {
-				found = true
-				break
-			}
-		}
-
-		if !found {
-			log.Printf("Disk %s found in the state and is not present on vm. Disk will be created", diskPrefix)
-
-			newDisk, err := createDisk(d, manager, &diskPrefix)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-
-			newDisk.Vm = vm
-			if err := vdc.CreateDisk(newDisk); err != nil {
-				return diag.FromErr(err)
-			}
-
-			if err := vm.Reload(); err != nil {
-				return diag.FromErr(err)
-			}
-		}
-
-	}
-
-	// Detect disk changes for found disks with the same id
-	for i := 0; i < disksCount; i++ {
-		diskPrefix := fmt.Sprintf("disk.%d", i)
-		diskId, diskExists := d.GetOk(MakePrefix(&diskPrefix, "id"))
-		if !diskExists {
-			// That case has been resolved above
-			continue
-		}
-
-		var foundDisk *rustack.Disk = nil
-		for _, disk := range vm.Disks {
-			if disk.ID == diskId {
-				foundDisk = disk
-				break
-			}
-		}
-
-		if foundDisk == nil {
-			// That case has been resolved above
-			continue
-		}
-
-		// Compare foundDisk
-		pseudoDisk, err := createDisk(d, manager, &diskPrefix)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-
-		if foundDisk.Name != pseudoDisk.Name {
-			if err = foundDisk.Rename(pseudoDisk.Name); err != nil {
-				return diag.FromErr(err)
-			}
-		}
-		if foundDisk.Size != pseudoDisk.Size {
-			if err = foundDisk.Resize(pseudoDisk.Size); err != nil {
-				return diag.FromErr(err)
-			}
-		}
-		if foundDisk.StorageProfile.ID != pseudoDisk.StorageProfile.ID {
-			if err = foundDisk.UpdateStorageProfile(*pseudoDisk.StorageProfile); err != nil {
-				return diag.FromErr(err)
-			}
 		}
 	}
 

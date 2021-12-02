@@ -10,26 +10,26 @@ terraform {
 }
 
 provider "rustack" {
-    token = "[PLACE_YOUR_TOKEN_HERE]"
+  token = "[PLACE_YOUR_TOKEN_HERE]"
 }
 data "rustack_project" "single_project" {
-    name = "Terraform Project"
+  name = "Terraform Project"
 }
 
 data "rustack_vdc" "single_vdc" {
-    project_id = "${data.rustack_project.single_project.id}"
-    name = "Terraform VDC"
+  project_id = data.rustack_project.single_project.id
+  name       = "Terraform VDC"
 }
 
 data "rustack_storage_profile" "single_storage_profile" {
-    vdc_id = data.rustack_vdc.single_vdc.id
-    name = "sas"
+  vdc_id = data.rustack_vdc.single_vdc.id
+  name   = "sas"
 }
 
 resource "rustack_disk" "disk2" {
-    vdc_id = data.rustack_vdc.single_vdc.id
+  vdc_id = data.rustack_vdc.single_vdc.id
 
-    name = "Диск 1"
-    storage_profile_id = data.rustack_storage_profile.single_storage_profile.id
-    size = 1
+  name               = "Disk 1"
+  storage_profile_id = data.rustack_storage_profile.single_storage_profile.id
+  size               = 1
 }

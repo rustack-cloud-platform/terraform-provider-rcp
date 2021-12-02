@@ -56,15 +56,21 @@ func (args *Arguments) injectCreateVm() {
 			ForceNew:    true,
 			Description: "script for cloud-init",
 		},
-		"disk": {
-			Type:        schema.TypeList,
+		"system_disk": {
+			Type:        schema.TypeString,
 			Required:    true,
-			MinItems:    1,
-			MaxItems:    20,
+			Description: "System disk. Format `1-ssd` where 1 is size in Gb and type is ssd",
+		},
+		"system_disk_id": {
+			Type:        schema.TypeString,
+			Computed:    true,
+			Description: "System disk id",
+		},
+		"disks": {
+			Type:        schema.TypeSet,
+			Optional:    true,
 			Description: "list of Disks attached to the Vm",
-			Elem: &schema.Resource{
-				Schema: diskCreation,
-			},
+			Elem:        &schema.Schema{Type: schema.TypeString},
 		},
 		"port": {
 			Type:        schema.TypeList,
