@@ -17,7 +17,7 @@ data "rustack_project" "single_project" {
 }
 
 data "rustack_vdc" "single_vdc" {
-    project_id = "${data.rustack_project.single_project.id}"
+    project_id = data.rustack_project.single_project.id"
     name = "Terraform VDC"
 }
 

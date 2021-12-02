@@ -13,7 +13,7 @@ data "rustack_project" "single_project" {
 }
 
 data "rustack_vdc" "single_vdc" {
-    project_id = "${data.rustack_project.single_project.id}"
+    project_id = data.rustack_project.single_project.id
     name = "Terraform VDC"
 }
 
@@ -61,19 +61,20 @@ resource "rustack_vm" "vm1" {
 
     template_id = data.rustack_template.debian10.id
 
-    user_data = "${file("user_data.yaml")}"
+    user_data = file("user_data.yaml")
 
-    disk {
-        name = "Main Disk"
-        size = 10
-        storage_profile_id = data.rustack_storage_profile.ssd.id
-    }
+    system_disk = "1-ssd" 
+    
+    disks = [
+        data.rustack_disk.new_disk1,
+        data.rustack_disk.new_disk2,
+    ]
 
     port {
         network_id = data.rustack_network.service_network.id
-        firewall_templates = ["${data.rustack_firewall_template.allow_default.id}",
-            "${data.rustack_firewall_template.allow_web.id}",
-            "${data.rustack_firewall_template.allow_ssh.id}"
+        firewall_templates = [data.rustack_firewall_template.allow_default.id,
+            data.rustack_firewall_template.allow_web.id,
+            data.rustack_firewall_template.allow_ssh.id
         ]
     }
 
@@ -86,7 +87,7 @@ resource "rustack_vm" "vm1" {
 ### Required
 
 - **cpu** (Number) the number of virtual cpus
-- **disk** (Block List, Min: 1, Max: 20) list of Disks attached to the Vm (see [below for nested schema](#nestedblock--disk))
+- **system_disk** (String) System disk. Format `1-ssd` where 1 is size in Gb and `ssd` is storage profile.
 - **name** (String) name of the Vm
 - **port** (Block List, Min: 1, Max: 10) list of Ports attached to the Vm (see [below for nested schema](#nestedblock--port))
 - **ram** (Number) memory of the Vm in gigabytes
@@ -99,6 +100,7 @@ resource "rustack_vm" "vm1" {
 - **floating** (Boolean) enable floating ip for the Vm
 - **id** (String) The ID of this resource.
 - **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
+- **disks** (Toset, String) list of Disks id attached to the Vm.
 
 ### Read-Only
 

@@ -25,7 +25,7 @@ data "rustack_hypervisor" "vmware" {
 
 resource "rustack_vdc" "vdc" {
     name = "Gitlab"
-    project_id = "${rustack_project.project.id}"
+    project_id = rustack_project.project.id
     hypervisor_id = data.rustack_hypervisor.vmware.id
 }
 
@@ -96,9 +96,9 @@ resource "rustack_vm" "gitlab" {
     port {
         network_id = data.rustack_network.service_network.id
         firewall_templates = [
-            "${data.rustack_firewall_template.allow_default.id}",
-            "${data.rustack_firewall_template.allow_web.id}",
-            "${data.rustack_firewall_template.allow_ssh.id}"
+            data.rustack_firewall_template.allow_default.id,
+            data.rustack_firewall_template.allow_web.id,
+            data.rustack_firewall_template.allow_ssh.id
         ]
     }
 

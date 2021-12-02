@@ -10,19 +10,19 @@ terraform {
 }
 
 provider "rustack" {
-    token = "[PLACE_YOUR_TOKEN_HERE]"
+  token = "[PLACE_YOUR_TOKEN_HERE]"
 }
 
 data "rustack_project" "single_project" {
-    name = "Terraform Project"
+  name = "Terraform Project"
 }
 
 data "rustack_vdc" "single_vdc" {
-    project_id = "${data.rustack_project.single_project.id}"
-    name = "Terraform VDC"
+  project_id = data.rustack_project.single_project.id
+  name       = "Terraform VDC"
 }
 
 data "rustack_vm" "single_vm" {
-    vdc_id = data.rustack_vdc.single_vdc.id
-    name = "Сервер 1"
+  vdc_id = data.rustack_vdc.single_vdc.id
+  name   = "Сервер 1"
 }

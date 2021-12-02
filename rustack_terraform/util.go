@@ -122,7 +122,7 @@ func GetStorageProfileById(d *schema.ResourceData, manager *rustack.Manager, vdc
 	}
 
 	if targetStorageProfile == nil {
-		return nil, fmt.Errorf("Storage profile with id '%s' not found", storageProfileId)
+		return nil, fmt.Errorf("ERROR. Storage profile with id '%s' not found", storageProfileId)
 	}
 
 	return targetStorageProfile, nil
@@ -156,7 +156,7 @@ func GetNetworkByName(d *schema.ResourceData, manager *rustack.Manager, vdc *rus
 	}
 
 	if targetNetwork == nil {
-		return nil, fmt.Errorf("Network with name '%s' not found", networkName)
+		return nil, fmt.Errorf("ERROR. Network with name '%s' not found", networkName)
 	}
 
 	return targetNetwork, nil
@@ -301,6 +301,27 @@ func GetVmByName(d *schema.ResourceData, manager *rustack.Manager, vdc *rustack.
 	}
 
 	return nil, fmt.Errorf("VM with name '%s' not found in vdc '%s'", vmName, vdc.Name)
+}
+
+func GetRouterByName(d *schema.ResourceData, manager *rustack.Manager) (*rustack.Router, error) {
+	routerName := d.Get("name").(string)
+	vdc, err := GetVdcById(d, manager)
+	if err != nil {
+		return nil, err
+	}
+	routers, err := vdc.GetRouters(rustack.Arguments{"name": routerName})
+
+	if err != nil {
+		return nil, errors.Wrap(err, "Error getting list of routers")
+	}
+
+	for _, router := range routers {
+		if router.Name == routerName {
+			return router, nil
+		}
+	}
+
+	return nil, fmt.Errorf("Router with name '%s' not found in vdc '%s'", routerName, vdc.Name)
 }
 
 func MakePrefix(prefix *string, name string) string {

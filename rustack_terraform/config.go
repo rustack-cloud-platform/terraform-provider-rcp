@@ -2,6 +2,7 @@ package rustack_terraform
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/pilat/rustack-go/rustack"
 	"github.com/sirupsen/logrus"
@@ -25,7 +26,7 @@ func (c *Config) Client() (*CombinedConfig, error) {
 
 	manager := rustack.NewManager(c.Token)
 	manager.Logger = logger
-	manager.BaseURL = c.APIEndpoint
+	manager.BaseURL = strings.TrimSuffix(c.APIEndpoint, "/")
 	manager.UserAgent = fmt.Sprintf("Terraform/%s", c.TerraformVersion)
 
 	return &CombinedConfig{

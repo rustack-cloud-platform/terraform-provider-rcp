@@ -29,7 +29,7 @@ data "rustack_hypervisor" "single_hypervisor" {
 
 resource "rustack_vdc" "vdc1" {
     name = "Terraform Demo VDC"
-    project_id = "${rustack_project.demo_project.id}"
+    project_id = rustack_project.demo_project.id
     hypervisor_id = data.rustack_hypervisor.single_hypervisor.id
 }
 
@@ -109,7 +109,7 @@ resource "rustack_vm" "vm_node" {
 
     template_id = data.rustack_template.debian10.id
 
-    user_data = "${element(data.template_file.cloud_init_node.*.rendered, 1)}" 
+    user_data = element(data.template_file.cloud_init_node.*.rendered, 1) 
 
     disk {
         name = "Root disk"
@@ -120,7 +120,7 @@ resource "rustack_vm" "vm_node" {
     port {
         network_id = data.rustack_network.service_network.id
         firewall_templates = [
-            "${data.rustack_firewall_template.allow_default.id}"
+            data.rustack_firewall_template.allow_default.id
         ]
     }
 
@@ -161,9 +161,9 @@ resource "rustack_vm" "vm_master" {
     port {
         network_id = data.rustack_network.service_network.id
         firewall_templates = [
-            "${data.rustack_firewall_template.allow_default.id}",
-            "${data.rustack_firewall_template.allow_web.id}",
-            "${data.rustack_firewall_template.allow_ssh.id}"
+            data.rustack_firewall_template.allow_default.id,
+            data.rustack_firewall_template.allow_web.id,
+            data.rustack_firewall_template.allow_ssh.id
         ]
     }
 

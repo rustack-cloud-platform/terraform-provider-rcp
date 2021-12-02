@@ -5,16 +5,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func (args *Arguments) injectContextDiskById() {
-	args.merge(Arguments{
-		"id": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "id of the Disk",
-		},
-	})
-}
-
 func (args *Arguments) injectContextDiskByName() {
 	args.merge(Arguments{
 		"name": {

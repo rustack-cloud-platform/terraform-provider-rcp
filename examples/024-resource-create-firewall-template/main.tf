@@ -10,21 +10,21 @@ terraform {
 }
 
 provider "rustack" {
-    token = "[PLACE_YOUR_TOKEN_HERE]"
+  token = "[PLACE_YOUR_TOKEN_HERE]"
 }
 
 data "rustack_project" "single_project" {
-    name = "Terraform Project"
+  name = "Terraform Project"
 }
 
 data "rustack_vdc" "single_vdc" {
-    project_id = "${data.rustack_project.single_project.id}"
-    name = "Terraform VDC"
+  project_id = data.rustack_project.single_project.id
+  name       = "Terraform VDC"
 }
 
 resource "rustack_firewall_template" "single_template" {
-    vdc_id = data.rustack_vdc.single_vdc.id
-    name = "New custom template"
+  vdc_id = data.rustack_vdc.single_vdc.id
+  name   = "New custom template"
 }
 
 resource "rustack_firewall_template" "single_template" {
