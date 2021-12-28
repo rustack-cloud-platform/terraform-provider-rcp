@@ -63,7 +63,10 @@ resource "rustack_vm" "vm1" {
 
     user_data = file("user_data.yaml")
 
-    system_disk = "1-ssd" 
+    system_disk {
+        size = 10
+        storage_profile_id = data.rustack_storage_profile.ssd.id
+    }
     
     disks = [
         data.rustack_disk.new_disk1,
@@ -87,7 +90,7 @@ resource "rustack_vm" "vm1" {
 ### Required
 
 - **cpu** (Number) the number of virtual cpus
-- **system_disk** (String) System disk. Format `1-ssd` where 1 is size in Gb and `ssd` is storage profile.
+- **system_disk** System disk (Min: 1, Max: 1). 
 - **name** (String) name of the Vm
 - **port** (Block List, Min: 1, Max: 10) list of Ports attached to the Vm (see [below for nested schema](#nestedblock--port))
 - **ram** (Number) memory of the Vm in gigabytes

@@ -80,7 +80,6 @@ func (args *Arguments) injectCreateRouter() {
 		},
 		"networks": {
 			Type: schema.TypeSet,
-			// Type:     schema.TypeString,
 			Required: true,
 			// TODO: setup limits
 			// MinItems:    1,

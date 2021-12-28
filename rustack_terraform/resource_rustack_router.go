@@ -50,6 +50,7 @@ func resourceRustackRouterCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	log.Printf("[DEBUG] Router create request: %#v", router)
+	vdc.WaitLock()
 	err = vdc.CreateRouter(&router, ports...)
 	if err != nil {
 		return diag.Errorf("Error creating Router: %s", err)
@@ -127,6 +128,7 @@ func resourceRustackRouterUpdate(ctx context.Context, d *schema.ResourceData, me
 			if err != nil {
 				return diag.Errorf("Port not found: %s", err)
 			}
+			portToDelete.WaitLock()
 			if err := portToDelete.Delete(); err != nil {
 				return diag.Errorf("One of the ports cannot be deleted: %s", err)
 			}

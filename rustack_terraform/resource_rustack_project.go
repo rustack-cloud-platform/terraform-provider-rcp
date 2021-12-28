@@ -96,7 +96,8 @@ func resourceRustackProjectDelete(ctx context.Context, d *schema.ResourceData, m
 	if err != nil {
 		return diag.Errorf("Error getting project: %s", err)
 	}
-
+	
+	project.WaitLock()
 	err = project.Delete()
 	if err != nil {
 		return diag.Errorf("Error deleting project: %s", err)

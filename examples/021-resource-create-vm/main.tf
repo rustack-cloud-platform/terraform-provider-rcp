@@ -78,11 +78,14 @@ resource "rustack_vm" "vm1" {
 
     user_data = "${file("user_data.yaml")}"
 
-    sysdisk = "1-ssd"
+    system_disk {
+        size = 10
+        storage_profile_id = data.rustack_storage_profile.ssd.id
+    }
     
     disks = [
-        data.rustack_disk.new_disk1,
-        data.rustack_disk.new_disk2,
+        data.rustack_disk.new_disk1.id,
+        data.rustack_disk.new_disk2.id,
     ]
 
     port {

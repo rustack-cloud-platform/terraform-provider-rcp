@@ -33,44 +33,17 @@ func resourceRustackNetworkCreate(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("Error getting VDC: %s", err)
 	}
 
-	subnets := d.Get("subnets").([]interface{})
-	log.Printf("[DEBUG] subnets: %#v", subnets)
-
 	log.Printf("[DEBUG] subnetInfo: %#v", targetVdc)
 	network := rustack.NewNetwork(d.Get("name").(string))
 
+	targetVdc.WaitLock()
 	if err = targetVdc.CreateNetwork(&network); err != nil {
 		return diag.Errorf("Error creating network: %s", err)
 	}
-
-	for _, subnetInfo := range subnets {
-		log.Printf("[DEBUG] subnetInfo: %#v", subnetInfo)
-		subnetInfo2 := subnetInfo.(map[string]interface{})
-
-		// Create subnet
-		subnet := rustack.NewSubnet(subnetInfo2["cidr"].(string), subnetInfo2["gateway"].(string), subnetInfo2["start_ip"].(string), subnetInfo2["end_ip"].(string), subnetInfo2["dhcp"].(bool))
-
-		network.WaitLock()
-		if err = network.CreateSubnet(&subnet); err != nil {
-			return diag.Errorf("Error creating subnet: %s", err)
-		}
-
-		dnsServersList := subnetInfo2["dns"].([]interface{})
-		dnsServers := make([]*rustack.SubnetDNSServer, len(dnsServersList))
-		for i, dns := range dnsServersList {
-			s1 := rustack.NewSubnetDNSServer(dns.(string))
-			dnsServers[i] = &s1
-		}
-
-		network.WaitLock()
-		if err = subnet.UpdateDNSServers(dnsServers); err != nil {
-			return diag.Errorf("Error Update DNS Servers: %s", err)
-		}
-
-		// TODO: Add Subnet Routes
-	}
-
 	d.SetId(network.ID)
+
+	createSubnet(d, manager)
+
 	log.Printf("[INFO] Network created, ID: %s", d.Id())
 
 	return resourceRustackNetworkRead(ctx, d, meta)
@@ -128,42 +101,9 @@ func resourceRustackNetworkUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	subnets := d.Get("subnets").([]interface{})
-	subnetsRaw, err := network.GetSubnets()
-	if err != nil {
-		return diag.Errorf("Unable to get subnets: %s", err)
-	}
-
-	for _, subnetInfo := range subnets {
-		subnetInfo2 := subnetInfo.(map[string]interface{})
-		for _, subnet := range subnetsRaw {
-			if subnet.ID == subnetInfo2["id"] {
-				newDHCPValue := subnetInfo2["dhcp"].(bool)
-				if subnet.IsDHCP != newDHCPValue {
-					if newDHCPValue {
-						err = subnet.EnableDHCP()
-						if err != nil {
-							return diag.Errorf("Unable to toggle DHCP: %s", err)
-						}
-					} else {
-						err = subnet.DisableDHCP()
-						if err != nil {
-							return diag.Errorf("Unable to toggle DHCP: %s", err)
-						}
-					}
-				}
-
-				// Set DNS again
-				dnsServersList := subnetInfo2["dns"].([]interface{})
-				dnsServers := make([]*rustack.SubnetDNSServer, len(dnsServersList))
-				for i, dns := range dnsServersList {
-					s1 := rustack.NewSubnetDNSServer(dns.(string))
-					dnsServers[i] = &s1
-				}
-
-				subnet.UpdateDNSServers(dnsServers)
-			}
-		}
+	if d.HasChange("subnets") {
+		deleteSubnet(d, manager)
+		createSubnet(d, manager)
 	}
 
 	return resourceRustackNetworkRead(ctx, d, meta)
@@ -176,10 +116,70 @@ func resourceRustackNetworkDelete(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("Error getting network: %s", err)
 	}
 
+	network.WaitLock()
 	err = network.Delete()
 	if err != nil {
 		return diag.Errorf("Error deleting network: %s", err)
 	}
 
 	return nil
+}
+
+func createSubnet(d *schema.ResourceData, manager *rustack.Manager) (diagErr diag.Diagnostics)  {
+
+	subnets := d.Get("subnets").([]interface{})
+	log.Printf("[DEBUG] subnets: %#v", subnets)
+	// network := rustack.NewNetwork(d.Get("name").(string))
+	network, err := manager.GetNetwork(d.Id())
+	if err != nil {
+		return diag.Errorf("Unable to get network: %s", err)
+	}
+
+	for _, subnetInfo := range subnets {
+		log.Printf("[DEBUG] subnetInfo: %#v", subnetInfo)
+		subnetInfo2 := subnetInfo.(map[string]interface{})
+
+		// Create subnet
+		subnet := rustack.NewSubnet(subnetInfo2["cidr"].(string), subnetInfo2["gateway"].(string), subnetInfo2["start_ip"].(string), subnetInfo2["end_ip"].(string), subnetInfo2["dhcp"].(bool))
+
+		network.WaitLock()
+		if err := network.CreateSubnet(&subnet); err != nil {
+			return diag.Errorf("Error creating subnet: %s", err)
+		}
+		
+
+		dnsServersList := subnetInfo2["dns"].([]interface{})
+		dnsServers := make([]*rustack.SubnetDNSServer, len(dnsServersList))
+		for i, dns := range dnsServersList {
+			s1 := rustack.NewSubnetDNSServer(dns.(string))
+			dnsServers[i] = &s1
+		}
+
+		network.WaitLock()
+		if err := subnet.UpdateDNSServers(dnsServers); err != nil {
+			return diag.Errorf("Error Update DNS Servers: %s", err)
+		}
+
+		// TODO: Add Subnet Routes
+	}
+
+	return 
+
+}
+
+func deleteSubnet(d *schema.ResourceData, manager *rustack.Manager) (err error) {
+	network, err := manager.GetNetwork(d.Id())
+	if err != nil {
+		return
+	}
+
+	subnetsRaw, err := network.GetSubnets()
+	if err != nil {
+		return
+	}
+
+	for _, subnet := range subnetsRaw {
+		subnet.Delete()
+	}
+	return
 }

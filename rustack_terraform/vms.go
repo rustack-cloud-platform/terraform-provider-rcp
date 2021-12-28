@@ -22,6 +22,9 @@ func (args *Arguments) injectCreateVm() {
 	portCreation := Defaults()
 	portCreation.injectCreatePort()
 
+	systemDisk := Defaults()
+	systemDisk.injectSystemDisk()
+
 	args.merge(Arguments{
 		"name": {
 			Type:     schema.TypeString,
@@ -57,14 +60,14 @@ func (args *Arguments) injectCreateVm() {
 			Description: "script for cloud-init",
 		},
 		"system_disk": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "System disk. Format `1-ssd` where 1 is size in Gb and type is ssd",
-		},
-		"system_disk_id": {
-			Type:        schema.TypeString,
-			Computed:    true,
-			Description: "System disk id",
+			Type:     schema.TypeList,
+			Required: true,
+			MinItems: 1,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: systemDisk,
+			},
+			Description: "System disk.",
 		},
 		"disks": {
 			Type:        schema.TypeSet,
@@ -152,6 +155,28 @@ func (args *Arguments) injectResultListVm() {
 			Elem: &schema.Resource{
 				Schema: s,
 			},
+		},
+	})
+}
+
+func (args *Arguments) injectSystemDisk() {
+	args.merge(Arguments{
+		"id": {
+			Type:        schema.TypeString,
+			Computed:    true,
+			Description: "id of the System Disk",
+		},
+		"name": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"size": {
+			Type:     schema.TypeInt,
+			Required: true,
+		},
+		"storage_profile_id": {
+			Type:     schema.TypeString,
+			Required: true,
 		},
 	})
 }
