@@ -2,8 +2,10 @@ package rustack_terraform
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -51,6 +53,29 @@ func resourceRustackRouterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	log.Printf("[DEBUG] Router create request: %#v", router)
 	vdc.WaitLock()
+
+	// Wait networks and routers of each ports
+	for _, port := range ports {
+		port.Network.WaitLock()
+		for {
+			networkCheck, err := manager.GetNetwork(port.Network.ID)
+			if err != nil {
+				return diag.Errorf("Error creating Router: %s", err)
+			}
+			if len(networkCheck.Subnets) != 0 {
+				networkCheck.Subnets[0].WaitLock()
+				break
+			}
+			time.Sleep(time.Second)
+		}
+		portRouter, err := getRouterByNetwork(*manager, *port.Network)
+		if err != nil {
+			return diag.Errorf("Error creating Router: %s", err)
+		}
+		if portRouter != nil {
+			portRouter.WaitLock()
+		}
+	}
 	err = vdc.CreateRouter(&router, ports...)
 	if err != nil {
 		return diag.Errorf("Error creating Router: %s", err)
@@ -199,6 +224,9 @@ func preparePortsToConnect(manager *rustack.Manager, d *schema.ResourceData) (po
 		network, err := manager.GetNetwork(networkId.(string))
 		if err != nil {
 			return nil, err
+		}
+		if network.Vdc.Id != vdc.ID {
+			return nil, errors.New("ERROR: Network should belong to routers vdc")
 		}
 		var newPort rustack.Port
 		newPort.Network = network

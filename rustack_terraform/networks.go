@@ -50,21 +50,25 @@ func (args *Arguments) injectCreateNetwork() {
 					},
 					"cidr": {
 						Type:        schema.TypeString,
+						ForceNew:    true,
 						Required:    true,
 						Description: "cidr of the Subnet",
 					},
 					"gateway": {
 						Type:        schema.TypeString,
+						ForceNew:    true,
 						Required:    true,
 						Description: "gateway of the Subnet",
 					},
 					"start_ip": {
 						Type:        schema.TypeString,
+						ForceNew:    true,
 						Required:    true,
 						Description: "pool start ip of the Subnet",
 					},
 					"end_ip": {
 						Type:        schema.TypeString,
+						ForceNew:    true,
 						Required:    true,
 						Description: "pool end ip of the Subnet",
 					},

@@ -54,7 +54,7 @@ func resourceRustackVmCreate(ctx context.Context, d *schema.ResourceData, meta i
 		vmName, cpu, ram, userData, template.Name)
 
 	// System disk creation
-	systemDiskArgs := d.Get("system_disk").([]interface{})[0].(map[string]interface{})
+	systemDiskArgs := d.Get("system_disk.0").(map[string]interface{})
 	diskSize := systemDiskArgs["size"].(int)
 	storageProfileId := systemDiskArgs["storage_profile_id"].(string)
 
@@ -76,6 +76,9 @@ func resourceRustackVmCreate(ctx context.Context, d *schema.ResourceData, meta i
 		if err != nil {
 			return diag.FromErr(err)
 		}
+		if newPort.Network.Vdc.Id != targetVdc.ID {
+			return diag.Errorf("ERROR: Network %s not in target's vdc", newPort.Network.Vdc.Id)
+		}
 
 		ports[i] = newPort
 
@@ -92,6 +95,23 @@ func resourceRustackVmCreate(ctx context.Context, d *schema.ResourceData, meta i
 		systemDiskList, floatingIp)
 
 	targetVdc.WaitLock()
+	for _, port := range newVm.Ports {
+		port.Network.WaitLock()
+		router, err := getRouterByNetwork(*manager, *port.Network)
+		if err != nil {
+			return diag.Errorf("Error creating vm: %s", err)
+		}
+		var j uint8
+		for router == nil {
+			router, err = getRouterByNetwork(*manager, *port.Network)
+			time.Sleep(time.Second)
+			j++
+			if j > 100 {
+				return diag.Errorf("Error creating vm: %s", err)
+			}
+		}
+		router.WaitLock()
+	}
 	err = targetVdc.CreateVm(&newVm)
 	if err != nil {
 		return diag.Errorf("Error creating vm: %s", err)
@@ -99,9 +119,9 @@ func resourceRustackVmCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	systemDisk := make([]interface{}, 1)
 	systemDisk[0] = map[string]interface{}{
-		"id":   newVm.Disks[0].ID,
-		"name": "Основной диск",
-		"size": newVm.Disks[0].Size,
+		"id":                 newVm.Disks[0].ID,
+		"name":               "Основной диск",
+		"size":               newVm.Disks[0].Size,
 		"storage_profile_id": newVm.Disks[0].StorageProfile.ID,
 	}
 
@@ -131,14 +151,14 @@ func resourceRustackVmRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	// d.Set("user_data", vm.UserData)
 
-	flattenDisks := make([]string, len(vm.Disks) - 1)
+	flattenDisks := make([]string, len(vm.Disks)-1)
 	for i, disk := range vm.Disks {
 		if i == 0 {
 			systemDisk := make([]interface{}, 1)
 			systemDisk[0] = map[string]interface{}{
-				"id":   disk.ID,
-				"name": "Основной диск",
-				"size": disk.Size,
+				"id":                 disk.ID,
+				"name":               "Основной диск",
+				"size":               disk.Size,
 				"storage_profile_id": disk.StorageProfile.ID,
 			}
 
@@ -287,11 +307,6 @@ func createDisk(d *schema.ResourceData, manager *rustack.Manager, diskPrefix *st
 }
 
 func createPort(d *schema.ResourceData, manager *rustack.Manager, portPrefix *string) (*rustack.Port, error) {
-	vdc, err := GetVdcById(d, manager)
-	if err != nil {
-		return nil, err
-	}
-
 	portNetwork, err := GetNetworkById(d, manager, portPrefix)
 	if err != nil {
 		return nil, err
@@ -299,13 +314,12 @@ func createPort(d *schema.ResourceData, manager *rustack.Manager, portPrefix *st
 
 	firewallsCount := d.Get(MakePrefix(portPrefix, "firewall_templates.#")).(int)
 	firewalls := make([]*rustack.FirewallTemplate, firewallsCount)
-	for j := 0; j < firewallsCount; j++ {
-		firewallName := MakePrefix(portPrefix, fmt.Sprintf("firewall_templates.%d", j))
-		portFirewall, err := GetFirewallTemplateById(d, manager, vdc, &firewallName)
+	firewallsResourceData := d.Get(MakePrefix(portPrefix, "firewall_templates")).(*schema.Set).List()
+	for j, firewallId := range firewallsResourceData {
+		portFirewall, err := manager.GetFirewallTemplate(firewallId.(string))
 		if err != nil {
 			return nil, err
 		}
-
 		firewalls[j] = portFirewall
 	}
 
@@ -314,8 +328,12 @@ func createPort(d *schema.ResourceData, manager *rustack.Manager, portPrefix *st
 }
 
 func syncDisks(d *schema.ResourceData, manager *rustack.Manager, vdc *rustack.Vdc, vm *rustack.Vm) (diagErr diag.Diagnostics) {
+	targetVdc, err := GetVdcById(d, manager)
+	if err != nil {
+		return diag.Errorf("ERROR. Something wrong with Vdc: %s", err)
+	}
 	disksIds := d.Get("disks").(*schema.Set).List()
-	systemDiskResource := d.Get("system_disk").([]interface{})[0]
+	systemDiskResource := d.Get("system_disk.0")
 	systemDisk := systemDiskResource.(map[string]interface{})["id"].(string)
 	disksIds = append(disksIds, systemDisk)
 
@@ -334,7 +352,7 @@ func syncDisks(d *schema.ResourceData, manager *rustack.Manager, vdc *rustack.Vd
 
 	// System disk resize
 	if d.HasChange("system_disk") {
-		systemDiskArgs := d.Get("system_disk").([]interface{})[0].(map[string]interface{})
+		systemDiskArgs := d.Get("system_disk.0").(map[string]interface{})
 		systemDiskId := systemDiskArgs["id"].(string)
 		diskSize := systemDiskArgs["size"].(int)
 		systemDisk, err := manager.GetDisk(systemDiskId)
@@ -343,6 +361,20 @@ func syncDisks(d *schema.ResourceData, manager *rustack.Manager, vdc *rustack.Vd
 		}
 		systemDisk.WaitLock()
 		systemDisk.Resize(diskSize)
+
+		if !d.HasChange("system_disk.0.storage_profile_id") {
+			return
+		}
+		storageProfileId := d.Get("system_disk.0.storage_profile_id").(string)
+		storageProfile, err := targetVdc.GetStorageProfile(storageProfileId)
+		if err != nil {
+			return diag.Errorf("Error getting storage profile: %s", err)
+		}
+
+		err = systemDisk.UpdateStorageProfile(*storageProfile)
+		if err != nil {
+			return diag.Errorf("Error updating storage: %s", err)
+		}
 	}
 
 	return
@@ -471,7 +503,7 @@ func syncPorts(d *schema.ResourceData, manager *rustack.Manager, vdc *rustack.Vd
 
 func attachNewDisk(d *schema.ResourceData, manager *rustack.Manager, vm *rustack.Vm) (diagErr diag.Diagnostics) {
 	disksIds := d.Get("disks").(*schema.Set).List()
-	systemDiskResource := d.Get("system_disk").([]interface{})[0]
+	systemDiskResource := d.Get("system_disk.0")
 	systemDisk := systemDiskResource.(map[string]interface{})["id"].(string)
 	var needReload bool
 	disksIds = append(disksIds, systemDisk)
@@ -516,7 +548,7 @@ func attachNewDisk(d *schema.ResourceData, manager *rustack.Manager, vm *rustack
 
 func detachOldDisk(d *schema.ResourceData, manager *rustack.Manager, vm *rustack.Vm) (diagErr diag.Diagnostics) {
 	disksIds := d.Get("disks").(*schema.Set).List()
-	systemDiskResource := d.Get("system_disk").([]interface{})[0]
+	systemDiskResource := d.Get("system_disk.0")
 	systemDisk := systemDiskResource.(map[string]interface{})["id"].(string)
 	var needReload bool
 	disksIds = append(disksIds, systemDisk)

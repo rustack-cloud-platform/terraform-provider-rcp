@@ -38,16 +38,6 @@ func GetFirewallTemplateByName(d *schema.ResourceData, manager *rustack.Manager,
 	return nil, fmt.Errorf("Firewall template with name '%s' not found", firewallTemplateName)
 }
 
-func GetFirewallTemplateById(d *schema.ResourceData, manager *rustack.Manager, vdc *rustack.Vdc, prefix *string) (*rustack.FirewallTemplate, error) {
-	firewallTemplateId := d.Get(MakePrefix(prefix, "")).(string)
-	firewallTemplate, err := manager.GetFirewallTemplate(firewallTemplateId)
-	if err != nil {
-		return nil, errors.Wrapf(err, "Firewall template with id '%s' not found", firewallTemplateId)
-	}
-
-	return firewallTemplate, nil
-}
-
 func GetTemplateByName(d *schema.ResourceData, manager *rustack.Manager, vdc *rustack.Vdc) (*rustack.Template, error) {
 	templateName := d.Get("name").(string)
 	templates, err := vdc.GetTemplates()
@@ -342,4 +332,19 @@ func setResourceDataFromMap(d *schema.ResourceData, m map[string]interface{}) er
 		}
 	}
 	return nil
+}
+
+func getRouterByNetwork(manager rustack.Manager, network rustack.Network) (router *rustack.Router, err error) {
+	routers, err := manager.GetRouters()
+	if err != nil {
+		return nil, err
+	}
+	for _, router := range routers {
+		for _, port := range router.Ports {
+			if port.Network.ID == network.ID {
+				return router, nil
+			}
+		}
+	}
+	return
 }

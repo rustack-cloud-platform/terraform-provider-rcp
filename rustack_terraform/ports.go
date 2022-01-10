@@ -19,7 +19,7 @@ func (args *Arguments) injectCreatePort() {
 			Description: "ip_address of the Port",
 		},
 		"firewall_templates": {
-			Type:        schema.TypeList,
+			Type:        schema.TypeSet,
 			Required:    true,
 			Description: "list of firewall rule ids of the Port",
 			Elem:        &schema.Schema{Type: schema.TypeString},
