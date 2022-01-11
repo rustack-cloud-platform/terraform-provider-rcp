@@ -30,12 +30,12 @@ func GetFirewallTemplateByName(d *schema.ResourceData, manager *rustack.Manager,
 	}
 
 	for _, firewallTemplate := range firewallTemplates {
-		if strings.ToLower(firewallTemplate.Name) == strings.ToLower(firewallTemplateName) {
+		if strings.EqualFold(firewallTemplate.Name, firewallTemplateName) {
 			return firewallTemplate, nil
 		}
 	}
 
-	return nil, fmt.Errorf("Firewall template with name '%s' not found", firewallTemplateName)
+	return nil, fmt.Errorf("ERROR: Firewall template with name '%s' not found", firewallTemplateName)
 }
 
 func GetTemplateByName(d *schema.ResourceData, manager *rustack.Manager, vdc *rustack.Vdc) (*rustack.Template, error) {
@@ -47,12 +47,12 @@ func GetTemplateByName(d *schema.ResourceData, manager *rustack.Manager, vdc *ru
 	}
 
 	for _, template := range templates {
-		if strings.ToLower(template.Name) == strings.ToLower(templateName) {
+		if strings.EqualFold(template.Name, templateName) {
 			return template, nil
 		}
 	}
 
-	return nil, fmt.Errorf("Template with name '%s' not found", templateName)
+	return nil, fmt.Errorf("ERROR: Template with name '%s' not found", templateName)
 
 }
 
@@ -76,12 +76,12 @@ func GetDiskByName(d *schema.ResourceData, manager *rustack.Manager, vdc *rustac
 	}
 
 	for _, disk := range disks {
-		if strings.ToLower(disk.Name) == strings.ToLower(diskName) {
+		if strings.EqualFold(disk.Name, diskName) {
 			return disk, nil
 		}
 	}
 
-	return nil, fmt.Errorf("Disk with name '%s' not found", diskName)
+	return nil, fmt.Errorf("ERROR: Disk with name '%s' not found", diskName)
 
 }
 
@@ -120,7 +120,8 @@ func GetStorageProfileById(d *schema.ResourceData, manager *rustack.Manager, vdc
 }
 
 func GetNetworkById(d *schema.ResourceData, manager *rustack.Manager, prefix *string) (*rustack.Network, error) {
-	networkId := d.Get(MakePrefix(prefix, "network_id")).(string)
+	networkPrefix := MakePrefix(prefix, "network_id")
+	networkId := d.Get(networkPrefix).(string)
 	targetNetwork, err := manager.GetNetwork(networkId)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error getting network")
@@ -162,14 +163,14 @@ func GetStorageProfileByName(d *schema.ResourceData, manager *rustack.Manager, v
 
 	storageProfileName := d.Get("name")
 	for _, storageProfile := range storageProfiles {
-		if strings.ToLower(storageProfile.Name) == strings.ToLower(storageProfileName.(string)) {
+		if strings.EqualFold(storageProfile.Name, storageProfileName.(string)) {
 			targetStorageProfile = storageProfile
 			break
 		}
 	}
 
 	if targetStorageProfile == nil {
-		return nil, fmt.Errorf("Storage profile with name '%s' not found in vdc '%s'", storageProfileName, vdc.Name)
+		return nil, fmt.Errorf("ERROR: Storage profile with name '%s' not found in vdc '%s'", storageProfileName, vdc.Name)
 	}
 
 	return targetStorageProfile, nil
@@ -192,7 +193,7 @@ func GetHypervisorByName(d *schema.ResourceData, manager *rustack.Manager, proje
 	}
 
 	if targetHypervisor == nil {
-		return nil, fmt.Errorf("Hypervisor with name '%s' not found", hypervisorName)
+		return nil, fmt.Errorf("ERROR: Hypervisor with name '%s' not found", hypervisorName)
 	}
 
 	return targetHypervisor, nil
@@ -215,7 +216,7 @@ func GetHypervisorById(d *schema.ResourceData, manager *rustack.Manager, project
 	}
 
 	if targetHypervisor == nil {
-		return nil, fmt.Errorf("Hypervisor with id '%s' not found", hypervisorId)
+		return nil, fmt.Errorf("ERROR: Hypervisor with id '%s' not found", hypervisorId)
 	}
 
 	return targetHypervisor, nil
@@ -235,7 +236,7 @@ func GetProjectByName(d *schema.ResourceData, manager *rustack.Manager) (*rustac
 		}
 	}
 
-	return nil, fmt.Errorf("Project with name '%s' not found", projectName)
+	return nil, fmt.Errorf("ERROR: Project with name '%s' not found", projectName)
 }
 
 func GetProjectById(d *schema.ResourceData, manager *rustack.Manager) (*rustack.Project, error) {
@@ -311,7 +312,7 @@ func GetRouterByName(d *schema.ResourceData, manager *rustack.Manager) (*rustack
 		}
 	}
 
-	return nil, fmt.Errorf("Router with name '%s' not found in vdc '%s'", routerName, vdc.Name)
+	return nil, fmt.Errorf("ERROR: Router with name '%s' not found in vdc '%s'", routerName, vdc.Name)
 }
 
 func MakePrefix(prefix *string, name string) string {
@@ -328,7 +329,7 @@ func MakePrefix(prefix *string, name string) string {
 func setResourceDataFromMap(d *schema.ResourceData, m map[string]interface{}) error {
 	for key, value := range m {
 		if err := d.Set(key, value); err != nil {
-			return fmt.Errorf("Unable to set `%s` attribute: %s", key, err)
+			return fmt.Errorf("ERROR: Unable to set `%s` attribute: %s", key, err)
 		}
 	}
 	return nil

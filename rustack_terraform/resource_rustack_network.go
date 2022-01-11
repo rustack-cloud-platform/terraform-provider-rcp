@@ -124,8 +124,8 @@ func resourceRustackNetworkDelete(ctx context.Context, d *schema.ResourceData, m
 	network.WaitLock()
 	var router *rustack.Router
 	var j uint8
-	// This waitlock serve to check if router is progress of 
-	// disconnecting current network so we could change it. 
+	// This waitlock serve to check if router is progress of
+	// disconnecting current network so we could change it.
 	for {
 		router, err = getRouterByNetwork(*manager, *network)
 		if err != nil {
@@ -194,6 +194,9 @@ func updateSubnet(d *schema.ResourceData, manager *rustack.Manager) (diagErr dia
 
 	subnets := d.Get("subnets").([]interface{})
 	network, err := manager.GetNetwork(d.Id())
+	if err != nil {
+		return diag.Errorf("Unable to get network: %s", err)
+	}
 	subnetsRaw, err := network.GetSubnets()
 	if err != nil {
 		return diag.Errorf("Unable to get subnets: %s", err)

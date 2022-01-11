@@ -67,22 +67,9 @@ func resourceRustackVmCreate(ctx context.Context, d *schema.ResourceData, meta i
 	newDisk := rustack.NewDisk("Основной диск", diskSize, storageProfile)
 	systemDiskList[0] = &newDisk
 
-	portsCount := d.Get("port.#").(int)
-	ports := make([]*rustack.Port, portsCount)
-	for i := 0; i < portsCount; i++ {
-		portPrefix := fmt.Sprintf("port.%d", i)
-
-		newPort, err := createPort(d, manager, &portPrefix)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		if newPort.Network.Vdc.Id != targetVdc.ID {
-			return diag.Errorf("ERROR: Network %s not in target's vdc", newPort.Network.Vdc.Id)
-		}
-
-		ports[i] = newPort
-
-		log.Printf("Create port with network '%s'", newPort.Network.ID)
+	ports, diagErr := createPorts(d, manager)
+	if diagErr != nil {
+		return diagErr
 	}
 
 	var floatingIp *string = nil
@@ -125,14 +112,42 @@ func resourceRustackVmCreate(ctx context.Context, d *schema.ResourceData, meta i
 		"storage_profile_id": newVm.Disks[0].StorageProfile.ID,
 	}
 
-	d.Set("system_disk", systemDisk)
-
 	syncDisks(d, manager, targetVdc, &newVm)
 
+	d.Set("system_disk", systemDisk)
 	d.SetId(newVm.ID)
+
 	log.Printf("[INFO] VM created, ID: %s", d.Id())
 
 	return resourceRustackVmRead(ctx, d, meta)
+}
+
+func createPorts(d *schema.ResourceData, manager *rustack.Manager) ([]*rustack.Port, diag.Diagnostics) {
+
+	targetVdc, err := GetVdcById(d, manager)
+	if err != nil {
+		return nil, diag.Errorf("Error getting VDC: %s", err)
+	}
+	portCount := d.Get("port.#").(int)
+	ports := make([]*rustack.Port, portCount)
+
+	for i := 0; i < portCount; i++ {
+		portPrefix := fmt.Sprint("port.",i)
+
+		newPort, err := createPort(d, manager, &portPrefix)
+		if err != nil {
+			return nil, diag.FromErr(err)
+		}
+		if newPort.Network.Vdc.Id != targetVdc.ID {
+			return nil, diag.Errorf("ERROR: Network %s not in target's vdc", newPort.Network.Vdc.Id)
+		}
+
+		ports[i] = newPort
+
+		log.Printf("Create port with network '%s'", newPort.Network.ID)
+	}
+
+	return ports, nil
 }
 
 func resourceRustackVmRead(ctx context.Context, d *schema.ResourceData, meta interface{}) (diagErr diag.Diagnostics) {
@@ -148,8 +163,6 @@ func resourceRustackVmRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("cpu", vm.Cpu)
 	d.Set("ram", vm.Ram)
 	d.Set("template_id", vm.Template.ID)
-
-	// d.Set("user_data", vm.UserData)
 
 	flattenDisks := make([]string, len(vm.Disks)-1)
 	for i, disk := range vm.Disks {
@@ -289,23 +302,6 @@ func resourceRustackVmDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return nil
 }
 
-func createDisk(d *schema.ResourceData, manager *rustack.Manager, diskPrefix *string) (*rustack.Disk, error) {
-	vdc, err := GetVdcById(d, manager)
-	if err != nil {
-		return nil, err
-	}
-
-	diskName := d.Get(MakePrefix(diskPrefix, "name")).(string)
-	diskSize := d.Get(MakePrefix(diskPrefix, "size")).(int)
-	storageProfile, err := GetStorageProfileById(d, manager, vdc, diskPrefix)
-	if err != nil {
-		return nil, err
-	}
-
-	newDisk := rustack.NewDisk(diskName, diskSize, storageProfile)
-	return &newDisk, nil
-}
-
 func createPort(d *schema.ResourceData, manager *rustack.Manager, portPrefix *string) (*rustack.Port, error) {
 	portNetwork, err := GetNetworkById(d, manager, portPrefix)
 	if err != nil {
@@ -332,10 +328,6 @@ func syncDisks(d *schema.ResourceData, manager *rustack.Manager, vdc *rustack.Vd
 	if err != nil {
 		return diag.Errorf("ERROR. Something wrong with Vdc: %s", err)
 	}
-	disksIds := d.Get("disks").(*schema.Set).List()
-	systemDiskResource := d.Get("system_disk.0")
-	systemDisk := systemDiskResource.(map[string]interface{})["id"].(string)
-	disksIds = append(disksIds, systemDisk)
 
 	// Which disks are present on vm and not mentioned in the state?
 	// Detach disks
@@ -381,71 +373,29 @@ func syncDisks(d *schema.ResourceData, manager *rustack.Manager, vdc *rustack.Vd
 }
 
 func syncPorts(d *schema.ResourceData, manager *rustack.Manager, vdc *rustack.Vdc, vm *rustack.Vm) diag.Diagnostics {
-	portsCount := d.Get("port.#").(int)
-
 	// Which ports are present on vm and not mentioned in the state?
-	needReload := false
-	for _, port := range vm.Ports {
-		found := false
-		for i := 0; i < portsCount; i++ {
-			portPrefix := fmt.Sprintf("port.%d", i)
-			portId := d.Get(MakePrefix(&portPrefix, "id"))
-			if portId == port.ID {
-				found = true
-				break
-			}
-		}
-
-		if !found {
-			log.Printf("Port %s found on vm and not mentioned in the state. Port will be deleted", port.ID)
-			port.WaitLock()
-			port.Delete()
-			needReload = true
-		}
-	}
-
-	if needReload {
-		if err := vm.Reload(); err != nil {
-			return diag.FromErr(err)
-		}
+	if diagErr := disconnectVmPorts(d, vm); diagErr != nil {
+		return diagErr
 	}
 
 	// Which ports are present in state and not in vm?
-	for i := 0; i < portsCount; i++ {
-		portPrefix := fmt.Sprintf("port.%d", i)
-		portId := d.Get(MakePrefix(&portPrefix, "id"))
-
-		found := false
-		for _, port := range vm.Ports {
-			if port.ID == portId {
-				found = true
-				break
-			}
-		}
-
-		if !found {
-			log.Printf("Port %s found in the state and is not present on vm. Port will be created", portPrefix)
-
-			newPort, err := createPort(d, manager, &portPrefix)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-
-			if err := vm.AddPort(newPort); err != nil {
-				return diag.FromErr(err)
-			}
-
-			if err := vm.Reload(); err != nil {
-				return diag.FromErr(err)
-			}
-		}
-
+	if diagErr := connectVmPorts(d, manager, vm); diagErr != nil {
+		return diagErr
 	}
 
 	// Detect port changes for found ports with the same id
-	for i := 0; i < portsCount; i++ {
-		portPrefix := fmt.Sprintf("port.%d", i)
-		portId, portExists := d.GetOk(MakePrefix(&portPrefix, "id"))
+	if diagErr := updateVmPorts(d, manager, vm); diagErr != nil {
+		return diagErr
+	}
+
+	return nil
+}
+
+func updateVmPorts(d *schema.ResourceData, manager *rustack.Manager, vm *rustack.Vm) diag.Diagnostics {
+
+	for i, port := range vm.Ports {
+		portPrefix := fmt.Sprint("port.", i)
+		portId, portExists := d.GetOk(port.ID)
 		if !portExists {
 			// That case has been resolved above
 			continue
@@ -501,15 +451,98 @@ func syncPorts(d *schema.ResourceData, manager *rustack.Manager, vdc *rustack.Vd
 	return nil
 }
 
+func connectVmPorts(d *schema.ResourceData, manager *rustack.Manager, vm *rustack.Vm) diag.Diagnostics {
+	portList := d.Get("port").([]interface{})
+
+	for i, portNew := range portList {
+		portId := portNew.(map[string]interface{})["id"].(string)
+		portPrefix := fmt.Sprint("port.", i)
+
+		found := false
+		for _, port := range vm.Ports {
+			if port.ID == portId {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			log.Printf("Port %s found in the state and is not present on vm. Port will be created", portPrefix)
+
+			newPort, err := createPort(d, manager, &portPrefix)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+
+			if err := vm.AddPort(newPort); err != nil {
+				return diag.FromErr(err)
+			}
+
+			if err := vm.Reload(); err != nil {
+				return diag.FromErr(err)
+			}
+		}
+	}
+
+	flattenPorts := make([]map[string]interface{}, len(vm.Ports))
+	for i, port := range vm.Ports {
+		flattenFirewallTemplates := make([]string, len(port.FirewallTemplates))
+		for j, firewallTemplate := range port.FirewallTemplates {
+			flattenFirewallTemplates[j] = firewallTemplate.ID
+		}
+		sort.Strings(flattenFirewallTemplates)
+
+		flattenPorts[i] = map[string]interface{}{
+			"id":                 port.ID,
+			"network_id":         port.Network.ID,
+			"firewall_templates": flattenFirewallTemplates,
+			"ip_address":         port.IpAddress,
+		}
+	}
+	d.Set("port", flattenPorts)
+
+	return nil
+}
+
+func disconnectVmPorts(d *schema.ResourceData, vm *rustack.Vm) diag.Diagnostics {
+	needReload := false
+	portList := d.Get("port").([]interface{})
+
+	for _, port := range vm.Ports {
+		found := false
+		for _, portNew := range portList {
+			portId := portNew.(map[string]interface{})["id"].(string)
+			if portId == port.ID {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			log.Printf("Port %s found on vm and not mentioned in the state. Port will be deleted", port.ID)
+			port.WaitLock()
+			if err := port.Delete(); err != nil {
+				return diag.FromErr(err)
+			}
+
+			needReload = true
+		}
+	}
+	if needReload {
+		if err := vm.Reload(); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	return nil
+}
+
 func attachNewDisk(d *schema.ResourceData, manager *rustack.Manager, vm *rustack.Vm) (diagErr diag.Diagnostics) {
 	disksIds := d.Get("disks").(*schema.Set).List()
 	systemDiskResource := d.Get("system_disk.0")
 	systemDisk := systemDiskResource.(map[string]interface{})["id"].(string)
 	var needReload bool
 	disksIds = append(disksIds, systemDisk)
-	for _, diskId := range disksIds {
-		disksIds = append(disksIds, diskId)
-	}
 
 	for _, diskId := range disksIds {
 		found := false

@@ -5,16 +5,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func (args *Arguments) injectContextFirewallTemplateById() {
-	args.merge(Arguments{
-		"firewall_template_id": {
-			Type:        schema.TypeString,
-			Required:    true,
-			Description: "id of the Firewall Template",
-		},
-	})
-}
-
 func (args *Arguments) injectContextFirewallTemplateByName() {
 	args.merge(Arguments{
 		"name": {

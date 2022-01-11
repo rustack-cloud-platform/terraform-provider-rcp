@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/pilat/rustack-go/rustack"
 	"github.com/sirupsen/logrus"
 )
@@ -20,7 +21,7 @@ type CombinedConfig struct {
 
 func (c *CombinedConfig) rustackManager() *rustack.Manager { return c.manager }
 
-func (c *Config) Client() (*CombinedConfig, error) {
+func (c *Config) Client() (*CombinedConfig, diag.Diagnostics) {
 	logger := logrus.New()
 	logger.SetLevel(logrus.DebugLevel)
 
