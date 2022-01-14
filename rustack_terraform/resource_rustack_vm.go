@@ -84,18 +84,21 @@ func resourceRustackVmCreate(ctx context.Context, d *schema.ResourceData, meta i
 	targetVdc.WaitLock()
 	for _, port := range newVm.Ports {
 		port.Network.WaitLock()
-		router, err := getRouterByNetwork(*manager, *port.Network)
-		if err != nil {
-			return diag.Errorf("Error creating vm: %s", err)
-		}
+		var router *rustack.Router
 		var j uint8
-		for router == nil {
+		for {
 			router, err = getRouterByNetwork(*manager, *port.Network)
+			if err != nil {
+				return diag.Errorf("Error getting router: %s", err)
+			}
+			if router != nil {
+				break
+			}
 			time.Sleep(time.Second)
-			j++
 			if j > 100 {
 				return diag.Errorf("Error creating vm: %s", err)
 			}
+			j++
 		}
 		router.WaitLock()
 	}
@@ -132,14 +135,14 @@ func createPorts(d *schema.ResourceData, manager *rustack.Manager) ([]*rustack.P
 	ports := make([]*rustack.Port, portCount)
 
 	for i := 0; i < portCount; i++ {
-		portPrefix := fmt.Sprint("port.",i)
+		portPrefix := fmt.Sprint("port.", i)
 
 		newPort, err := createPort(d, manager, &portPrefix)
 		if err != nil {
 			return nil, diag.FromErr(err)
 		}
 		if newPort.Network.Vdc.Id != targetVdc.ID {
-			return nil, diag.Errorf("ERROR: Network %s not in target's vdc", newPort.Network.Vdc.Id)
+			return nil, diag.Errorf("ERROR: Network %s not in target's vdc", newPort.Network.ID)
 		}
 
 		ports[i] = newPort
@@ -393,41 +396,37 @@ func syncPorts(d *schema.ResourceData, manager *rustack.Manager, vdc *rustack.Vd
 
 func updateVmPorts(d *schema.ResourceData, manager *rustack.Manager, vm *rustack.Vm) diag.Diagnostics {
 
-	for i, port := range vm.Ports {
-		portPrefix := fmt.Sprint("port.", i)
-		portId, portExists := d.GetOk(port.ID)
+	for _, port := range vm.Ports {
+		var portExists bool
+		var portId string
+		var portPrefix string
+		portList := d.Get("port").([]interface{})
+		for i, p := range portList {
+			portPrefix = fmt.Sprint("port.", i)
+			portId = p.(map[string]interface{})["id"].(string)
+			if portId == port.ID {
+				portExists = true
+				break
+			}
+		}
 		if !portExists {
 			// That case has been resolved above
 			continue
 		}
 
-		var foundPort *rustack.Port = nil
-		for _, port := range vm.Ports {
-			if port.ID == portId {
-				foundPort = port
-				break
-			}
-		}
-
-		if foundPort == nil {
-			// That case has been resolved above
-			continue
-		}
-
-		// Compare foundPort
+		// Compare port
 		pseudoPort, err := createPort(d, manager, &portPrefix)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 
-		// TODO: Compare firewall templates
 		isEqual := true
-		if len(pseudoPort.FirewallTemplates) != len(foundPort.FirewallTemplates) {
+		if len(pseudoPort.FirewallTemplates) != len(port.FirewallTemplates) {
 			isEqual = false
 		} else {
 			for _, l := range pseudoPort.FirewallTemplates {
 				found := false
-				for _, r := range foundPort.FirewallTemplates {
+				for _, r := range port.FirewallTemplates {
 					if r.ID == l.ID {
 						found = true
 						break
@@ -442,7 +441,7 @@ func updateVmPorts(d *schema.ResourceData, manager *rustack.Manager, vm *rustack
 		}
 
 		if !isEqual {
-			if err = foundPort.UpdateFirewall(pseudoPort.FirewallTemplates); err != nil {
+			if err = port.UpdateFirewall(pseudoPort.FirewallTemplates); err != nil {
 				return diag.FromErr(err)
 			}
 		}
@@ -483,23 +482,6 @@ func connectVmPorts(d *schema.ResourceData, manager *rustack.Manager, vm *rustac
 			}
 		}
 	}
-
-	flattenPorts := make([]map[string]interface{}, len(vm.Ports))
-	for i, port := range vm.Ports {
-		flattenFirewallTemplates := make([]string, len(port.FirewallTemplates))
-		for j, firewallTemplate := range port.FirewallTemplates {
-			flattenFirewallTemplates[j] = firewallTemplate.ID
-		}
-		sort.Strings(flattenFirewallTemplates)
-
-		flattenPorts[i] = map[string]interface{}{
-			"id":                 port.ID,
-			"network_id":         port.Network.ID,
-			"firewall_templates": flattenFirewallTemplates,
-			"ip_address":         port.IpAddress,
-		}
-	}
-	d.Set("port", flattenPorts)
 
 	return nil
 }

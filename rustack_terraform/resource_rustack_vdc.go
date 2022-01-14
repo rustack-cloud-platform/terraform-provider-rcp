@@ -45,7 +45,14 @@ func resourceRustackVdcCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	vdc := rustack.NewVdc(d.Get("name").(string), targetHypervisor)
 
-	err = targetProject.CreateVdc(&vdc)
+	// if we creating multiple vdc at once, there are need some time to get new vnid
+	for j := 0; j < 15; j++ {
+		err = targetProject.CreateVdc(&vdc)
+		if err == nil {
+			break
+		}
+	}
+
 	if err != nil {
 		return diag.Errorf("Error creating vdc: %s", err)
 	}

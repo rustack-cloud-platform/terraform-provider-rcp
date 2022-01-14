@@ -49,7 +49,8 @@ resource "rustack_router" "new_router" {
 
 ### Optional
 
-- **floating** (String) ip address. This ip should be created and available in vdc.
+- **system** (Bool) let terraform treat system router properly. False by default.
+- **floating** (Bool) enable floating ip for the Router. True by default.
 - **is_default** (Bool) Set up this option to set router by default.
 
 Read-Only:

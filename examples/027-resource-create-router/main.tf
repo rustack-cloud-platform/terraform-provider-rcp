@@ -39,5 +39,11 @@ resource "rustack_router" "new_router" {
     data.rustack_network.network1.id,
     data.rustack_network.network2.id
   ]
-  # floating = "10.11.133.8"
+  # floating = false
+
+  # System router creating automatically with vdc, to manage it there is special flag "system". 
+  # Terraform wont create new router, but read existing one so you can manage it like resource
+  # On delete terraform will disconnect all networks except the default and return floating to default "true" value.
+
+  # system = true 
 }

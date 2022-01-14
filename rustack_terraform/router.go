@@ -51,27 +51,29 @@ func (args *Arguments) injectCreateRouter() {
 		"id": {
 			Type:        schema.TypeString,
 			Computed:    true,
-			Description: "id of the Router",
+			Description: "Id of the Router",
 		},
 		"name": {
 			Type:     schema.TypeString,
-			Required: true,
+			Optional: true,
+			Computed: true,
 			ValidateFunc: validation.All(
 				validation.NoZeroValues,
 				validation.StringLenBetween(2, 100),
 			),
-			Description: "name of the Router",
+			Description: "Name of the Router",
 		},
 		"is_default": {
 			Type:        schema.TypeBool,
 			Optional:    true,
 			Default:     false,
-			Description: "set if this is default router",
+			Description: "Set if this is default router",
 		},
 		"floating": {
-			Type:        schema.TypeString,
+			Type:        schema.TypeBool,
 			Optional:    true,
-			Description: "Floating ip address, it is random by default.",
+			Default:     true,
+			Description: "Enable floating ip for the Vm",
 		},
 		"floating_id": {
 			Type:        schema.TypeString,
@@ -79,13 +81,20 @@ func (args *Arguments) injectCreateRouter() {
 			Description: "Floating id address.",
 		},
 		"networks": {
-			Type: schema.TypeSet,
-			Required: true,
+			Type:     schema.TypeSet,
+			Optional: true,
+			Computed: true,
 			// TODO: setup limits
 			// MinItems:    1,
 			// MaxItems:    20,
 			Description: "list of networks",
 			Elem:        &schema.Schema{Type: schema.TypeString},
+		},
+		"system": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     false,
+			Description: "Determinate if router is system.",
 		},
 	})
 }
