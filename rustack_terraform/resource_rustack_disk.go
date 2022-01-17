@@ -121,6 +121,16 @@ func resourceRustackDiskDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	disk.WaitLock()
+	if disk.Vm != nil {
+		vm, err := manager.GetVm(disk.Vm.ID)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		err = vm.DetachDisk(disk)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
 	err = disk.Delete()
 	if err != nil {
 		return diag.Errorf("Error deleting disk: %s", err)

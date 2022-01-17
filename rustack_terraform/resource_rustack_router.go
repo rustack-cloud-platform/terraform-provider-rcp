@@ -121,7 +121,9 @@ func setSetviceRouter(d *schema.ResourceData, manager *rustack.Manager) diag.Dia
 		return diag.FromErr(err)
 	}
 	d.SetId(router.ID)
-	d.Set("floating_id", router.Floating.ID)
+	if router.Floating != nil {
+		d.Set("floating_id", router.Floating.ID)
+	}
 
 	flattenedRecords := make([]string, len(router.Ports))
 	for i, port := range router.Ports {
@@ -297,6 +299,7 @@ func syncFloating(d *schema.ResourceData, router *rustack.Router) (err error) {
 	if floating.(bool) && (router.Floating == nil) {
 		// add floating if it was removed
 		router.Floating = &rustack.Floating{ID: "0.0.0.0"}
+		router.WaitLock()
 		err = router.Update()
 		if err != nil {
 			return
@@ -306,7 +309,13 @@ func syncFloating(d *schema.ResourceData, router *rustack.Router) (err error) {
 	} else if !floating.(bool) && (router.Floating != nil) {
 		// remove floating if needed
 		router.Floating = nil
-		err = router.Update()
+		for j := 0; j < 15; j++ {
+			err = router.Update()
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Second)
+		}
 		if err != nil {
 			return
 		}
@@ -353,8 +362,10 @@ func preparePortsToConnect(manager *rustack.Manager, d *schema.ResourceData) (po
 			continue
 		}
 		for _, port := range vdcPorts {
-			if port.Connected != nil && port.Connected.ID == router.ID && port.Network.ID == network.ID {
+			if port.Network != nil && port.Network.ID == network.ID {
 				port.Network.WaitLock()
+			}
+			if port.Connected != nil && port.Connected.ID == router.ID && port.Network.ID == network.ID {
 				ports = append(ports, port)
 				found = true
 				break

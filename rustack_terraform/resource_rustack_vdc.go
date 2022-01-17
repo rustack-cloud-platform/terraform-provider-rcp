@@ -51,6 +51,7 @@ func resourceRustackVdcCreate(ctx context.Context, d *schema.ResourceData, meta 
 		if err == nil {
 			break
 		}
+		time.Sleep(time.Second)
 	}
 
 	if err != nil {

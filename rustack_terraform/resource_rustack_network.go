@@ -122,26 +122,23 @@ func resourceRustackNetworkDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	network.WaitLock()
-	var router *rustack.Router
-	var j uint8
-	// This waitlock serve to check if router is progress of
-	// disconnecting current network so we could change it.
-	for {
-		router, err = getRouterByNetwork(*manager, *network)
-		if err != nil {
-			return diag.Errorf("Error deleting network: %s", err)
+
+	// disconnect before delete
+	vdc, err := GetVdcById(d, manager)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	ports, err := vdc.GetPorts()
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	for _, port := range ports {
+		if port.Network.ID == network.ID {
+			if port.Connected.Type == "service" {
+				continue
+			}
+			port.Delete()
 		}
-		if router == nil {
-			break
-		}
-		if j < 5 {
-			router.WaitLock()
-			j++
-			continue
-		}
-		return diag.Errorf("Networks 'cidr', 'gateway', 'start_ip' and "+
-			"'end_ip' can't be changed. It's connected to router %s: %s",
-			router.Name, router.ID)
 	}
 
 	err = network.Delete()
