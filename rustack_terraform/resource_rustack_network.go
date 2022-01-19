@@ -132,12 +132,21 @@ func resourceRustackNetworkDelete(ctx context.Context, d *schema.ResourceData, m
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	for _, port := range ports {
-		if port.Network.ID == network.ID {
-			if port.Connected.Type == "service" {
-				continue
+	// we have to delete ports in the strict order
+	// first we should delete ports from vms then from routers
+	for j := 0; j < 15; j++ {
+		deleted := false
+		for _, port := range ports {
+			if port.Network.ID == network.ID {
+				if port.Connected.Type == "service" {
+					continue
+				}
+				port.Delete()
+				deleted = true
 			}
-			port.Delete()
+		}
+		if !deleted {
+			break
 		}
 	}
 

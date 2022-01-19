@@ -3,6 +3,7 @@ package rustack_terraform
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pilat/rustack-go/rustack"
@@ -346,6 +347,17 @@ func getRouterByNetwork(manager rustack.Manager, network rustack.Network) (route
 				return router, nil
 			}
 		}
+	}
+	return
+}
+
+func repeatOnError(f func() error) (err error) {
+	for j := 0; j < 15; j++ {
+		err = f()
+		if err == nil {
+			return
+		}
+		time.Sleep(time.Second)
 	}
 	return
 }

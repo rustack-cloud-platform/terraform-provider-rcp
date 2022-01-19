@@ -272,7 +272,7 @@ func syncRouterPorts(d *schema.ResourceData, manager *rustack.Manager, router *r
 				return fmt.Errorf("ERROR: Port not found: %s", err)
 			}
 			portToDelete.WaitLock()
-			if err := portToDelete.Delete(); err != nil {
+			if err := repeatOnError(portToDelete.Delete); err != nil {
 				return fmt.Errorf("ERROR: One of the ports cannot be deleted: %s", err)
 			}
 		}
@@ -309,13 +309,7 @@ func syncFloating(d *schema.ResourceData, router *rustack.Router) (err error) {
 	} else if !floating.(bool) && (router.Floating != nil) {
 		// remove floating if needed
 		router.Floating = nil
-		for j := 0; j < 15; j++ {
-			err = router.Update()
-			if err == nil {
-				break
-			}
-			time.Sleep(time.Second)
-		}
+		err = repeatOnError(router.Update)
 		if err != nil {
 			return
 		}

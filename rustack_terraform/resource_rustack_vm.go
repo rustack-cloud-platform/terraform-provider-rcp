@@ -257,7 +257,7 @@ func resourceRustackVmUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 	if needUpdate {
 		for _, port := range vm.Ports {
-			port.WaitLock() 
+			port.WaitLock()
 		}
 		if err := vm.Update(); err != nil {
 			return diag.Errorf("Error getting vm: %s", err)
@@ -476,7 +476,8 @@ func connectVmPorts(d *schema.ResourceData, manager *rustack.Manager, vm *rustac
 				return diag.FromErr(err)
 			}
 
-			if err := vm.AddPort(newPort); err != nil {
+			f := func() error { return vm.AddPort(newPort) }
+			if err := repeatOnError(f); err != nil {
 				return diag.FromErr(err)
 			}
 
