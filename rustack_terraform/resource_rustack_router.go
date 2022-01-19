@@ -94,17 +94,22 @@ func resourceRustackRouterDelete(ctx context.Context, d *schema.ResourceData, me
 				return diag.FromErr(err)
 			}
 			if !network.IsDefault {
-				err := port.Delete()
+				err := repeatOnError(port.Delete, port)
 				if err != nil {
 					return diag.Errorf("Error deleting Router: %s", err)
 				}
 			}
 		}
+		if router.Floating == nil {
+			router.Floating = &rustack.Floating{ID: "RANDOM_FIP"}
+			if err = repeatOnError(router.Update, router); err != nil {
+				return diag.Errorf("ERROR: Can't return router to default state: %s", err)
+			}
+		}
 		return nil
 	}
 
-	router.WaitLock()
-	err = router.Delete()
+	err = repeatOnError(router.Delete, router)
 	if err != nil {
 		return diag.Errorf("Error deleting Router: %s", err)
 	}
@@ -161,7 +166,7 @@ func createRouter(d *schema.ResourceData, manager *rustack.Manager) (diagErr dia
 	router.Vdc.Id = vdc.ID
 	floating := d.Get("floating").(bool)
 	if floating {
-		router.Floating = &rustack.Floating{ID: "0.0.0.0"}
+		router.Floating = &rustack.Floating{ID: "RANDOM_FIP"}
 		if err != nil {
 			return diag.Errorf("Error floating set up: %s", err)
 		}
@@ -271,8 +276,7 @@ func syncRouterPorts(d *schema.ResourceData, manager *rustack.Manager, router *r
 			if err != nil {
 				return fmt.Errorf("ERROR: Port not found: %s", err)
 			}
-			portToDelete.WaitLock()
-			if err := repeatOnError(portToDelete.Delete); err != nil {
+			if err := repeatOnError(portToDelete.Delete, portToDelete); err != nil {
 				return fmt.Errorf("ERROR: One of the ports cannot be deleted: %s", err)
 			}
 		}
@@ -284,9 +288,7 @@ func syncRouterPorts(d *schema.ResourceData, manager *rustack.Manager, router *r
 		return fmt.Errorf("ERROR: Can't get ports: %s", err)
 	}
 	router.Ports = ports
-	router.WaitLock()
-	err = router.Update()
-	if err != nil {
+	if err = repeatOnError(router.Update, router); err != nil {
 		return fmt.Errorf("ERROR: Can't update Router: %s", err)
 	}
 	log.Printf("[INFO] Updated Router, ID: %v", router)
@@ -298,18 +300,16 @@ func syncFloating(d *schema.ResourceData, router *rustack.Router) (err error) {
 	floating := d.Get("floating")
 	if floating.(bool) && (router.Floating == nil) {
 		// add floating if it was removed
-		router.Floating = &rustack.Floating{ID: "0.0.0.0"}
-		router.WaitLock()
-		err = router.Update()
-		if err != nil {
-			return
+		router.Floating = &rustack.Floating{ID: "RANDOM_FIP"}
+		if err = repeatOnError(router.Update, router); err != nil {
+			return fmt.Errorf("ERROR: Can't update Router: %s", err)
 		}
 		d.Set("floating", true)
 		d.Set("floating_id", router.Floating.ID)
 	} else if !floating.(bool) && (router.Floating != nil) {
 		// remove floating if needed
 		router.Floating = nil
-		err = repeatOnError(router.Update)
+		err = repeatOnError(router.Update, router)
 		if err != nil {
 			return
 		}

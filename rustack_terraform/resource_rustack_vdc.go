@@ -47,7 +47,7 @@ func resourceRustackVdcCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	// if we creating multiple vdc at once, there are need some time to get new vnid
 	f := func() error { return targetProject.CreateVdc(&vdc) }
-	err = repeatOnError(f)
+	err = repeatOnError(f, targetProject)
 
 	if err != nil {
 		return diag.Errorf("Error creating vdc: %s", err)

@@ -155,6 +155,11 @@ func createPorts(d *schema.ResourceData, manager *rustack.Manager) ([]*rustack.P
 
 func resourceRustackVmRead(ctx context.Context, d *schema.ResourceData, meta interface{}) (diagErr diag.Diagnostics) {
 	manager := meta.(*CombinedConfig).rustackManager()
+	vdc, err := GetVdcById(d, manager)
+	if err != nil {
+		return diag.Errorf("Unable to get vdc: %s", err)
+	}
+	vdc.WaitLock()
 	vm, err := manager.GetVm(d.Id())
 	if err != nil {
 		diagErr = diag.Errorf("Error getting vm: %s", err)
@@ -259,7 +264,7 @@ func resourceRustackVmUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		for _, port := range vm.Ports {
 			port.WaitLock()
 		}
-		if err := vm.Update(); err != nil {
+		if err := repeatOnError(vm.Update, vm); err != nil {
 			return diag.Errorf("Error getting vm: %s", err)
 		}
 	}
@@ -477,11 +482,11 @@ func connectVmPorts(d *schema.ResourceData, manager *rustack.Manager, vm *rustac
 			}
 
 			f := func() error { return vm.AddPort(newPort) }
-			if err := repeatOnError(f); err != nil {
+			if err := repeatOnError(f, vm); err != nil {
 				return diag.FromErr(err)
 			}
 
-			if err := vm.Reload(); err != nil {
+			if err := repeatOnError(vm.Reload, vm); err != nil {
 				return diag.FromErr(err)
 			}
 		}

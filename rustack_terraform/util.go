@@ -351,8 +351,9 @@ func getRouterByNetwork(manager rustack.Manager, network rustack.Network) (route
 	return
 }
 
-func repeatOnError(f func() error) (err error) {
+func repeatOnError(f func() error,targerInterface interface{WaitLock() error}) (err error) {
 	for j := 0; j < 15; j++ {
+		targerInterface.WaitLock()
 		err = f()
 		if err == nil {
 			return

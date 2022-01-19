@@ -150,8 +150,7 @@ func resourceRustackNetworkDelete(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	err = network.Delete()
-	if err != nil {
+	if err = repeatOnError(network.Delete, network); err != nil {
 		return diag.Errorf("Error deleting network: %s", err)
 	}
 
