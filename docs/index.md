@@ -15,7 +15,6 @@ terraform {
   required_providers {
     rustack = {
       source  = "pilat/rustack"
-      version = "~> 0.1"
     }
   }
 }

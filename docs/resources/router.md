@@ -1,7 +1,7 @@
 ---
-page_title: "rustack_network Resource - terraform-provider-rustack"
+page_title: "rustack_router Resource - terraform-provider-rustack"
 ---
-# rustack_network (Resource)
+# rustack_router (Resource)
 
 Provides a Rustack network to provide connections of two or more computers that are linked in order to share resources.
 
@@ -18,23 +18,23 @@ data "rustack_vdc" "single_vdc" {
 }
 
 data "rustack_network" "default_network" {
-  vdc_id = rustack_vdc.single_vdc.id
+  vdc_id =  data.rustack_vdc.single_vdc.id
   name = "Network"
 }
 
 data "rustack_network" "new_network" {
-  vdc_id = rustack_vdc.single_vdc.id
+  vdc_id =  data.rustack_vdc.single_vdc.id
   name = "New network"
 }
 
 resource "rustack_router" "new_router" {
-  vdc_id = rustack_vdc.single_vdc.id
+  vdc_id =  data.rustack_vdc.single_vdc.id
   name = "New router"
   networks = [
     data.rustack_network.new_network.id,
     data.rustack_network.default_network.id
   ]
-  floating = "8.8.8.8" # comment this if you want to set a random ip.
+  floating = false
 }
 
 ```

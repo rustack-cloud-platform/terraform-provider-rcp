@@ -358,6 +358,7 @@ func repeatOnError(f func() error,targerInterface interface{WaitLock() error}) (
 		if err == nil {
 			return
 		}
+		fmt.Printf("err: %v\n", err)
 		time.Sleep(time.Second)
 	}
 	return

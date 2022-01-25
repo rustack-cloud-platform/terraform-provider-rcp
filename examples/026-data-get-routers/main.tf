@@ -4,7 +4,6 @@ terraform {
   required_providers {
     rustack = {
       source  = "pilat/rustack"
-      version = "~> 0.1"
     }
   }
 }
@@ -23,5 +22,5 @@ data "rustack_vdc" "single_vdc" {
 }
 
 data "rustack_routers" "vdc_routers" {
-  vdc_id = rustack_vdc.single_vdc.id
+  vdc_id = data.rustack_vdc.single_vdc.id
 }

@@ -10,7 +10,7 @@ Firewall allow you to manage your network traffic.
 ```hcl
 
 resource "rustack_firewall_template" "single_template" {
-  vdc_id = rustack_vdc.single_vdc.id
+  vdc_id = data.rustack_vdc.single_vdc.id
   name   = "New custom template"
 
   ingress_rule {

@@ -225,6 +225,7 @@ func resourceRustackVmUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	hasFlavorChanged := false
 	needUpdate := false
 
+	targetVdc.WaitLock()
 	vm, err := manager.GetVm(d.Id())
 	if err != nil {
 		return diag.Errorf("Error getting vm: %s", err)
@@ -265,7 +266,7 @@ func resourceRustackVmUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			port.WaitLock()
 		}
 		if err := repeatOnError(vm.Update, vm); err != nil {
-			return diag.Errorf("Error getting vm: %s", err)
+			return diag.Errorf("Error updating vm: %s", err)
 		}
 	}
 

@@ -4,7 +4,6 @@ terraform {
   required_providers {
     rustack = {
       source  = "pilat/rustack"
-      version = "~> 0.1"
     }
   }
 }
@@ -23,17 +22,17 @@ data "rustack_vdc" "single_vdc" {
 }
 
 data "rustack_network" "network1" {
-    vdc_id = rustack_vdc.single_vdc.id
+    vdc_id = data.rustack_vdc.single_vdc.id
     name = "Network 1"
 }
 
 data "rustack_network" "network2" {
-    vdc_id = rustack_vdc.single_vdc.id
+    vdc_id = data.rustack_vdc.single_vdc.id
     name = "Network 2"
 }
 
 resource "rustack_router" "new_router" {
-  vdc_id = rustack_vdc.single_vdc.id
+  vdc_id = data.rustack_vdc.single_vdc.id
   name = "New router3"
   networks = [
     data.rustack_network.network1.id,
