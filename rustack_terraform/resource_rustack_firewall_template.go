@@ -43,7 +43,6 @@ func resourceRustackFirewallTemplateCreate(ctx context.Context, d *schema.Resour
 	}
 
 	newFirewallTemplate := rustack.NewFirewallTemplate(d.Get("name").(string))
-	targetVdc.WaitLock()
 	err = targetVdc.CreateFirewallTemplate(&newFirewallTemplate)
 	if err != nil {
 		return diag.Errorf("Error creating Firewall Template: %s", err)
@@ -63,7 +62,6 @@ func resourceRustackFirewallTemplateCreate(ctx context.Context, d *schema.Resour
 			newFirewallRule.Direction = ruleType
 			setUpRule(&newFirewallRule, d)
 
-			newFirewallTemplate.WaitLock()
 			if err = newFirewallTemplate.Update(&newFirewallRule); err != nil {
 				return diag.Errorf("Error creating Firewall rule: %s", err)
 			}
@@ -150,7 +148,6 @@ func deleteRules(firewallTemplate rustack.FirewallTemplate, rules []interface{})
 		if err != nil {
 			return err
 		}
-		rule.WaitLock()
 		rule.Delete()
 	}
 	return
@@ -216,7 +213,6 @@ func createRules(d *schema.ResourceData, firewallTemplate rustack.FirewallTempla
 		newFirewallRule.Direction = ruleType
 		setUpRule(&newFirewallRule, d)
 
-		firewallTemplate.WaitLock()
 		if err = firewallTemplate.CreateFirewallRule(&newFirewallRule); err != nil {
 			return err
 		}
@@ -234,7 +230,6 @@ func resourceRustackFirewallTemplateDelete(ctx context.Context, d *schema.Resour
 		return diag.Errorf("Error getting FirewallTemplate: %s", err)
 	}
 
-	FirewallTemplate.WaitLock()
 	err = FirewallTemplate.Delete()
 	if err != nil {
 		return diag.Errorf("Error deleting FirewallTemplate: %s", err)

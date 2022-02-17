@@ -103,7 +103,6 @@ func resourceRustackVdcDelete(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("Error getting vdc: %s", err)
 	}
 
-	vdc.WaitLock()
 	err = vdc.Delete()
 	if err != nil {
 		return diag.Errorf("Error deleting vdc: %s", err)

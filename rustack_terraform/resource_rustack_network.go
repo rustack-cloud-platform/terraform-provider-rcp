@@ -36,7 +36,6 @@ func resourceRustackNetworkCreate(ctx context.Context, d *schema.ResourceData, m
 	log.Printf("[DEBUG] subnetInfo: %#v", targetVdc)
 	network := rustack.NewNetwork(d.Get("name").(string))
 
-	targetVdc.WaitLock()
 	if err = targetVdc.CreateNetwork(&network); err != nil {
 		return diag.Errorf("Error creating network: %s", err)
 	}
@@ -121,8 +120,6 @@ func resourceRustackNetworkDelete(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("Error getting network: %s", err)
 	}
 
-	network.WaitLock()
-
 	// disconnect before delete
 	vdc, err := GetVdcById(d, manager)
 	if err != nil {
@@ -141,7 +138,9 @@ func resourceRustackNetworkDelete(ctx context.Context, d *schema.ResourceData, m
 				if port.Connected.Type == "service" {
 					continue
 				}
-				port.Delete()
+				if err := port.Delete(); err != nil {
+					return diag.FromErr(err)
+				}
 				deleted = true
 			}
 		}
@@ -172,7 +171,6 @@ func createSubnet(d *schema.ResourceData, manager *rustack.Manager) (diagErr dia
 		// Create subnet
 		subnet := rustack.NewSubnet(subnetInfo2["cidr"].(string), subnetInfo2["gateway"].(string), subnetInfo2["start_ip"].(string), subnetInfo2["end_ip"].(string), subnetInfo2["dhcp"].(bool))
 
-		network.WaitLock()
 		if err := network.CreateSubnet(&subnet); err != nil {
 			return diag.Errorf("Error creating subnet: %s", err)
 		}
@@ -184,7 +182,6 @@ func createSubnet(d *schema.ResourceData, manager *rustack.Manager) (diagErr dia
 			dnsServers[i] = &s1
 		}
 
-		network.WaitLock()
 		if err := subnet.UpdateDNSServers(dnsServers); err != nil {
 			return diag.Errorf("Error Update DNS Servers: %s", err)
 		}

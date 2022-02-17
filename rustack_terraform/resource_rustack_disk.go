@@ -45,7 +45,6 @@ func resourceRustackDiskCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	newDisk := rustack.NewDisk(d.Get("name").(string), d.Get("size").(int), targetStorageProfile)
-	targetVdc.WaitLock()
 	err = targetVdc.CreateDisk(&newDisk)
 	if err != nil {
 		return diag.Errorf("Error creating disk: %s", err)
@@ -120,7 +119,6 @@ func resourceRustackDiskDelete(ctx context.Context, d *schema.ResourceData, meta
 		return diag.Errorf("Error getting disk: %s", err)
 	}
 
-	disk.WaitLock()
 	if disk.Vm != nil {
 		vm, err := manager.GetVm(disk.Vm.ID)
 		if err != nil {
