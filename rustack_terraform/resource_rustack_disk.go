@@ -45,6 +45,7 @@ func resourceRustackDiskCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	newDisk := rustack.NewDisk(d.Get("name").(string), d.Get("size").(int), targetStorageProfile)
+	targetVdc.WaitLock()
 	err = targetVdc.CreateDisk(&newDisk)
 	if err != nil {
 		return diag.Errorf("Error creating disk: %s", err)

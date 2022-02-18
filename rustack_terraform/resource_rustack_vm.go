@@ -81,24 +81,6 @@ func resourceRustackVmCreate(ctx context.Context, d *schema.ResourceData, meta i
 	newVm := rustack.NewVm(vmName, cpu, ram, template, nil, &userData, ports,
 		systemDiskList, floatingIp)
 
-	for _, port := range newVm.Ports {
-		var router *rustack.Router
-		var j uint8
-		for {
-			router, err = getRouterByNetwork(*manager, *port.Network)
-			if err != nil {
-				return diag.Errorf("Error getting router: %s", err)
-			}
-			if router != nil {
-				break
-			}
-			time.Sleep(time.Second)
-			if j > 100 {
-				return diag.Errorf("Error creating vm: %s", err)
-			}
-			j++
-		}
-	}
 	err = targetVdc.CreateVm(&newVm)
 	if err != nil {
 		return diag.Errorf("Error creating vm: %s", err)
@@ -327,15 +309,15 @@ func syncDisks(d *schema.ResourceData, manager *rustack.Manager, vdc *rustack.Vd
 		return diag.Errorf("ERROR. Something wrong with Vdc: %s", err)
 	}
 
-	// Which disks are present on vm and not mentioned in the state?
-	// Detach disks
-	diagErr = detachOldDisk(d, manager, vm)
+	// List disks to join
+	diagErr = attachNewDisk(d, manager, vm)
 	if diagErr != nil {
 		return
 	}
 
-	// List disks to join
-	diagErr = attachNewDisk(d, manager, vm)
+	// Which disks are present on vm and not mentioned in the state?
+	// Detach disks
+	diagErr = detachOldDisk(d, manager, vm)
 	if diagErr != nil {
 		return
 	}

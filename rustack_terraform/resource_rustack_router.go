@@ -179,15 +179,18 @@ func createRouter(d *schema.ResourceData, manager *rustack.Manager) (diagErr dia
 	}
 
 	log.Printf("[DEBUG] Router create request: %#v", router)
+	vdc.WaitLock()
 
 	// Wait networks and routers of each ports
 	for _, port := range ports {
+		port.Network.WaitLock()
 		for {
 			networkCheck, err := manager.GetNetwork(port.Network.ID)
 			if err != nil {
 				return diag.Errorf("Error creating Router: %s", err)
 			}
 			if len(networkCheck.Subnets) != 0 {
+				networkCheck.Subnets[0].WaitLock()
 				break
 			}
 			time.Sleep(time.Second)
@@ -197,6 +200,7 @@ func createRouter(d *schema.ResourceData, manager *rustack.Manager) (diagErr dia
 			return diag.Errorf("Error creating Router: %s", err)
 		}
 		if portRouter != nil {
+			portRouter.WaitLock()
 		}
 	}
 	err = vdc.CreateRouter(&router, ports...)
@@ -360,6 +364,7 @@ func preparePortsToConnect(manager *rustack.Manager, d *schema.ResourceData) (po
 		}
 		for _, port := range vdcPorts {
 			if port.Network != nil && port.Network.ID == network.ID {
+				port.Network.WaitLock()
 			}
 			if port.Connected != nil && port.Connected.ID == router.ID && port.Network.ID == network.ID {
 				ports = append(ports, port)

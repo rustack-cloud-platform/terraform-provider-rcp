@@ -36,6 +36,7 @@ func resourceRustackNetworkCreate(ctx context.Context, d *schema.ResourceData, m
 	log.Printf("[DEBUG] subnetInfo: %#v", targetVdc)
 	network := rustack.NewNetwork(d.Get("name").(string))
 
+	targetVdc.WaitLock()
 	if err = targetVdc.CreateNetwork(&network); err != nil {
 		return diag.Errorf("Error creating network: %s", err)
 	}
