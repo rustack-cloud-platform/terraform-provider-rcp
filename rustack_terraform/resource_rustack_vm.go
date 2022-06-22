@@ -297,8 +297,13 @@ func createPort(d *schema.ResourceData, manager *rustack.Manager, portPrefix *st
 		}
 		firewalls[j] = portFirewall
 	}
+	ipAddressStr := d.Get(MakePrefix(portPrefix, "ip_address")).(string)
+	ipAddress := &ipAddressStr
+	if ipAddressStr == "" {
+		ipAddress = nil
+	}
 
-	newPort := rustack.NewPort(portNetwork, firewalls, nil)
+	newPort := rustack.NewPort(portNetwork, firewalls, ipAddress)
 	return &newPort, nil
 }
 
