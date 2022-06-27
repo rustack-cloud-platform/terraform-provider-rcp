@@ -226,10 +226,9 @@ func resourceRustackVmUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	if d.HasChange("floating") {
 		needUpdate = true
 		if !d.Get("floating").(bool) {
-			vm.Floating = nil
+			vm.Floating = &rustack.Port{IpAddress: nil}
 		} else {
-			floatingIpStr := "RANDOM_FIP"
-			vm.Floating = &rustack.Port{IpAddress: &floatingIpStr}
+			vm.Floating = &rustack.Port{ID: "RANDOM_FIP"}
 		}
 		d.Set("floating", vm.Floating != nil)
 	}
@@ -360,14 +359,13 @@ func syncDisks(d *schema.ResourceData, manager *rustack.Manager, vdc *rustack.Vd
 }
 
 func syncPorts(d *schema.ResourceData, manager *rustack.Manager, vdc *rustack.Vdc, vm *rustack.Vm) diag.Diagnostics {
-	// Which ports are present in state and not in vm?
-	if diagErr := connectVmPorts(d, manager); diagErr != nil {
-		return diagErr
+	// Delete disconnected ports and create a new if connected
+	portList := d.Get("port").([]interface{})
+	if portList != nil {
+		return nil
 	}
-
-	// Which ports are present on vm and not mentioned in the state?
-	if diagErr := disconnectVmPorts(d, manager); diagErr != nil {
-		return diagErr
+	if err := manageVmPorts(d, manager); err != nil {
+		return diag.FromErr(err)
 	}
 
 	// Detect port changes for found ports with the same id
@@ -376,6 +374,91 @@ func syncPorts(d *schema.ResourceData, manager *rustack.Manager, vdc *rustack.Vd
 	}
 
 	return nil
+}
+
+func manageVmPorts(d *schema.ResourceData, manager *rustack.Manager) (err error) {
+	needReload := false
+	ports, err := connectVmPorts(d, manager)
+	if err != nil {
+		return err
+	}
+
+	vm, err := manager.GetVm(d.Id())
+	if err != nil {
+		return err
+	}
+	// disconnect ports
+	oldPortList := vm.Ports
+	newPortList := ports
+	for _, old_port := range oldPortList {
+		found := false
+		for _, portNew := range newPortList {
+			portId := portNew.ID
+			if portId == old_port.ID {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			log.Printf("Port %s found on vm and not mentioned in the state. Port will be deleted", old_port.ID)
+			if err := old_port.ForceDelete(); err != nil {
+				return err
+			}
+
+			needReload = true
+		}
+	}
+	if needReload {
+		if err := vm.Reload(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func connectVmPorts(d *schema.ResourceData, manager *rustack.Manager) (ports []*rustack.Port, err error) {
+	portList := d.Get("port").([]interface{})
+	vm, err := manager.GetVm(d.Id())
+	if err != nil {
+		return nil, err
+	}
+
+	for i, portNew := range portList {
+		portId := portNew.(map[string]interface{})["id"].(string)
+		portPrefix := fmt.Sprint("port.", i)
+
+		found := false
+		for _, port := range vm.Ports {
+			if port.ID == portId {
+				found = true
+				ports = append(ports, port)
+				break
+			}
+		}
+
+		if !found {
+			log.Printf("Port %s found in the state and is not present on vm. Port will be created", portPrefix)
+
+			newPort, err := createPort(d, manager, &portPrefix)
+			if err != nil {
+				return nil, err
+			}
+
+			f := func() error { return vm.AddPort(newPort) }
+			if err := repeatOnError(f, vm); err != nil {
+				return nil, err
+			}
+
+			if err := repeatOnError(vm.Reload, vm); err != nil {
+				return nil, err
+			}
+			ports = append(ports, newPort)
+		}
+	}
+
+	return
 }
 
 func updateVmPorts(d *schema.ResourceData, manager *rustack.Manager) diag.Diagnostics {
@@ -409,87 +492,6 @@ func updateVmPorts(d *schema.ResourceData, manager *rustack.Manager) diag.Diagno
 		}
 
 		if err = port.UpdateFirewall(pseudoPort.FirewallTemplates); err != nil {
-			return diag.FromErr(err)
-		}
-	}
-
-	return nil
-}
-
-func connectVmPorts(d *schema.ResourceData, manager *rustack.Manager) diag.Diagnostics {
-	portList := d.Get("port").([]interface{})
-
-	vm, err := manager.GetVm(d.Id())
-	if err != nil {
-		return diag.Errorf("Error getting vm: %s", err)
-	}
-
-	for i, portNew := range portList {
-		portId := portNew.(map[string]interface{})["id"].(string)
-		portPrefix := fmt.Sprint("port.", i)
-
-		found := false
-		for _, port := range vm.Ports {
-			if port.ID == portId {
-				found = true
-				break
-			}
-		}
-
-		if !found {
-			log.Printf("Port %s found in the state and is not present on vm. Port will be created", portPrefix)
-
-			newPort, err := createPort(d, manager, &portPrefix)
-			if err != nil {
-				return diag.FromErr(err)
-			}
-
-			f := func() error { return vm.AddPort(newPort) }
-			if err := repeatOnError(f, vm); err != nil {
-				return diag.FromErr(err)
-			}
-
-			if err := repeatOnError(vm.Reload, vm); err != nil {
-				return diag.FromErr(err)
-			}
-		}
-	}
-
-	// get port to update it
-	d.Get("port")
-	return nil
-}
-
-func disconnectVmPorts(d *schema.ResourceData, manager *rustack.Manager) diag.Diagnostics {
-	needReload := false
-	portList := d.Get("port").([]interface{})
-
-	vm, err := manager.GetVm(d.Id())
-	if err != nil {
-		return diag.Errorf("Error getting vm: %s", err)
-	}
-
-	for _, port := range vm.Ports {
-		found := false
-		for _, portNew := range portList {
-			portId := portNew.(map[string]interface{})["id"].(string)
-			if portId == port.ID {
-				found = true
-				break
-			}
-		}
-
-		if !found {
-			log.Printf("Port %s found on vm and not mentioned in the state. Port will be deleted", port.ID)
-			if err := port.Delete(); err != nil {
-				return diag.FromErr(err)
-			}
-
-			needReload = true
-		}
-	}
-	if needReload {
-		if err := vm.Reload(); err != nil {
 			return diag.FromErr(err)
 		}
 	}
@@ -565,6 +567,32 @@ func detachOldDisk(d *schema.ResourceData, manager *rustack.Manager, vm *rustack
 		if err := vm.Reload(); err != nil {
 			return diag.FromErr(err)
 		}
+	}
+
+	return
+}
+
+func resourceRustackVmPortRead(vm *rustack.Vm, d *schema.ResourceData) (diagErr diag.Diagnostics) {
+	flattenPorts := make([]map[string]interface{}, len(vm.Ports))
+	for i, port := range vm.Ports {
+		flattenFirewallTemplates := make([]string, len(port.FirewallTemplates))
+		for j, firewallTemplate := range port.FirewallTemplates {
+			flattenFirewallTemplates[j] = firewallTemplate.ID
+		}
+		sort.Strings(flattenFirewallTemplates)
+
+		flattenPorts[i] = map[string]interface{}{
+			"id":                 port.ID,
+			"network_id":         port.Network.ID,
+			"firewall_templates": flattenFirewallTemplates,
+			"ip_address":         port.IpAddress,
+		}
+	}
+	d.Set("port", flattenPorts)
+	d.Set("floating", vm.Floating != nil)
+	d.Set("floating_ip", "")
+	if vm.Floating != nil {
+		d.Set("floating_ip", vm.Floating.IpAddress)
 	}
 
 	return

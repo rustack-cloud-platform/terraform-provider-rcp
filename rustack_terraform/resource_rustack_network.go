@@ -3,7 +3,9 @@ package rustack_terraform
 import (
 	"context"
 	"log"
+	"strings"
 
+	// "fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pilat/rustack-go/rustack"
@@ -25,6 +27,10 @@ func resourceRustackNetwork() *schema.Resource {
 		Schema: args,
 	}
 }
+
+const ru_port_error string = "Ваша сеть имеет хосты, которые могут рассматривать этот роутер как шлюз. Подключите их к другой, отдельной сети перед выполнением этого действия."
+const eng_port_error string = "do that because the network has a host or hosts threaded it as a gateway. Reconnect them to another network before doing that."
+const not_foud_error string = "404"
 
 func resourceRustackNetworkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	manager := meta.(*CombinedConfig).rustackManager()
@@ -132,20 +138,49 @@ func resourceRustackNetworkDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 	// we have to delete ports in the strict order
 	// first we should delete ports from vms then from routers
+	var router_port *rustack.Port
 	for j := 0; j < 15; j++ {
 		deleted := false
 		for _, port := range ports {
 			if port.Network.ID == network.ID {
 				if port.Connected.Type == "service" {
 					continue
+				} else if port.Connected.Type == "router" {
+					router, err := manager.GetRouter(port.Connected.ID)
+					if err != nil {
+						return diag.FromErr(err)
+					}
+					if router.Locked {
+						router.WaitLock()
+					}
+				} else if port.Connected.Type == "vm" {
+					vm, err := manager.GetVm(port.Connected.ID)
+					if err != nil {
+						return diag.FromErr(err)
+					}
+					if vm.Locked {
+						vm.WaitLock()
+					}
 				}
-				if err := port.Delete(); err != nil {
+				if err := port.ForceDelete(); err != nil {
+					if strings.Contains(err.Error(), ru_port_error) || strings.Contains(err.Error(), eng_port_error) {
+						router_port = port
+						continue
+					}
+					if strings.Contains(err.Error(), not_foud_error) {
+						continue
+					}
 					return diag.FromErr(err)
 				}
 				deleted = true
 			}
 		}
 		if !deleted {
+			if router_port != nil {
+				if err := router_port.ForceDelete(); err != nil {
+					return diag.FromErr(err)
+				}
+			}
 			break
 		}
 	}

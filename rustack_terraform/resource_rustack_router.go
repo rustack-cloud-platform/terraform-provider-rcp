@@ -55,7 +55,9 @@ func resourceRustackRouterRead(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(router.ID)
 	d.Set("name", router.Name)
 	d.Set("floating", router.Floating)
-	d.Set("floating_id", router.Floating.ID)
+	if router.Floating != nil {
+		d.Set("floating_id", router.Floating.ID)
+	}
 	networks := []string{}
 	for _, port := range router.Ports {
 		networks = append(networks, port.Network.ID)
@@ -89,13 +91,19 @@ func resourceRustackRouterUpdate(ctx context.Context, d *schema.ResourceData, me
 func resourceRustackRouterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	manager := meta.(*CombinedConfig).rustackManager()
 	routerId := d.Id()
-
 	router, err := manager.GetRouter(routerId)
+	targetVdc, err := GetVdcById(d, manager)
 	if err != nil {
 		return diag.Errorf("Error getting Router: %s", err)
 	}
 
 	if d.Get("system").(bool) {
+		network := GetServiseNetworkByVdc(targetVdc)
+		var newPort rustack.Port
+		newPort.Network = network
+		router.CreatePort(&newPort, router)
+		router.WaitLock()
+
 		for _, port := range router.Ports {
 			network, err := manager.GetNetwork(port.Network.ID)
 			if err != nil {
@@ -106,20 +114,21 @@ func resourceRustackRouterDelete(ctx context.Context, d *schema.ResourceData, me
 					return diag.Errorf("Error deleting Router: %s", err)
 				}
 			}
-		}
-		if router.Floating == nil {
-			router.Floating = &rustack.Port{ID: "RANDOM_FIP"}
-			if err = repeatOnError(router.Update, router); err != nil {
-				return diag.Errorf("ERROR: Can't return router to default state: %s", err)
+			if router.Floating == nil {
+				router.Floating = &rustack.Port{ID: "RANDOM_FIP"}
+				if err = repeatOnError(router.Update, router); err != nil {
+					return diag.Errorf("ERROR: Can't return router to default state: %s", err)
+				}
 			}
 		}
+
 		return nil
 	}
 
 	if err = repeatOnError(router.Delete, router); err != nil {
 		return diag.Errorf("Error deleting Router: %s", err)
 	}
-
+	
 	d.SetId("")
 	log.Printf("[INFO] Router deleted, ID: %s", routerId)
 
@@ -162,7 +171,14 @@ func createRouter(d *schema.ResourceData, manager *rustack.Manager) (diagErr dia
 	if _, ok := d.GetOk("networks"); !ok {
 		return diag.Errorf("ERROR: You should setup a network for non default routers")
 	}
-	router := rustack.NewRouter(d.Get("name").(string))
+
+	var floatingIp *string = nil
+	if d.Get("floating").(bool) {
+		floatingIpStr := "RANDOM_FIP"
+		floatingIp = &floatingIpStr
+	}
+
+	router := rustack.NewRouter(d.Get("name").(string), floatingIp)
 
 	ports, err := preparePortsToConnect(manager, d)
 	if err != nil {
@@ -170,13 +186,6 @@ func createRouter(d *schema.ResourceData, manager *rustack.Manager) (diagErr dia
 	}
 
 	router.Vdc.Id = vdc.ID
-	floating := d.Get("floating").(bool)
-	if floating {
-		router.Floating = &rustack.Port{ID: "RANDOM_FIP"}
-		if err != nil {
-			return diag.Errorf("Error floating set up: %s", err)
-		}
-	}
 
 	log.Printf("[DEBUG] Router create request: %#v", router)
 	vdc.WaitLock()
@@ -209,8 +218,11 @@ func createRouter(d *schema.ResourceData, manager *rustack.Manager) (diagErr dia
 	}
 
 	d.SetId(router.ID)
-	d.Set("floating_id", router.Floating.ID)
-	log.Printf("[INFO] Router created, ID: %s", d.Id())
+	d.Set("floating", router.Floating)
+	if router.Floating != nil {
+		d.Set("floating_id", router.Floating.ID)
+	}
+	log.Printf("[INFO] Router created, ID: %s", router.ID)
 
 	return
 }
@@ -293,7 +305,7 @@ func syncRouterPorts(d *schema.ResourceData, manager *rustack.Manager, router *r
 				return fmt.Errorf("ERROR: Port not found: %s", err)
 			}
 
-			if err = repeatOnError(portToDelete.Delete, portToDelete); err != nil {
+			if err = repeatOnError(portToDelete.ForceDelete, portToDelete); err != nil {
 				return fmt.Errorf("ERROR: One of the ports cannot be deleted: %s", err)
 			}
 		}

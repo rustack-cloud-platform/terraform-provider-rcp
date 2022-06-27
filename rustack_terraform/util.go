@@ -351,7 +351,7 @@ func getRouterByNetwork(manager rustack.Manager, network rustack.Network) (route
 	return
 }
 
-func repeatOnError(f func() error,targerInterface interface{WaitLock() error}) (err error) {
+func repeatOnError(f func() error, targerInterface interface{ WaitLock() error }) (err error) {
 	for j := 0; j < 15; j++ {
 		targerInterface.WaitLock()
 		err = f()
@@ -360,6 +360,16 @@ func repeatOnError(f func() error,targerInterface interface{WaitLock() error}) (
 		}
 		fmt.Printf("err: %v\n", err)
 		time.Sleep(time.Second)
+	}
+	return
+}
+
+func GetServiseNetworkByVdc(vdc *rustack.Vdc) (network *rustack.Network) {
+	allNetworks, _ := vdc.GetNetworks()
+	for _, network := range allNetworks {
+		if network.IsDefault {
+			return network
+		}
 	}
 	return
 }
