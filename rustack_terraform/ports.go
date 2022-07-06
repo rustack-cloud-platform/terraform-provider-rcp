@@ -15,8 +15,12 @@ func (args *Arguments) injectCreatePort() {
 		},
 		"ip_address": {
 			Type:        schema.TypeString,
-			Computed:    true,
+			Optional:    true,
+			Default:     "",
 			Description: "ip_address of the Port",
+			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+				return new == ""
+			},
 		},
 		"firewall_templates": {
 			Type:        schema.TypeSet,

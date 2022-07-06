@@ -77,13 +77,11 @@ func (args *Arguments) injectCreateVm() {
 		},
 		"port": {
 			Type:        schema.TypeList,
-			Required:    true,
+			Optional:    true,
 			MinItems:    1,
 			MaxItems:    10,
 			Description: "list of Ports attached to the Vm",
-			Elem: &schema.Resource{
-				Schema: portCreation,
-			},
+			Elem:        &schema.Resource{Schema: portCreation},
 		},
 		"floating": {
 			Type:        schema.TypeBool,
@@ -95,6 +93,12 @@ func (args *Arguments) injectCreateVm() {
 			Type:        schema.TypeString,
 			Computed:    true,
 			Description: "floating ip for the Vm. May be omitted",
+		},
+		"power": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     true,
+			Description: "power of vw on/off",
 		},
 	})
 }
@@ -140,6 +144,12 @@ func (args *Arguments) injectResultVm() {
 			Type:        schema.TypeString,
 			Computed:    true,
 			Description: "floating_ip of the Vm. May be omitted",
+		},
+		"power": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     true,
+			Description: "power of vw on/off",
 		},
 	})
 }
