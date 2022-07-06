@@ -30,7 +30,7 @@ func resourceRustackNetwork() *schema.Resource {
 
 const ru_port_error string = "Ваша сеть имеет хосты, которые могут рассматривать этот роутер как шлюз. Подключите их к другой, отдельной сети перед выполнением этого действия."
 const eng_port_error string = "do that because the network has a host or hosts threaded it as a gateway. Reconnect them to another network before doing that."
-const not_foud_error string = "404"
+const not_found_error string = "404"
 
 func resourceRustackNetworkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	manager := meta.(*CombinedConfig).rustackManager()
@@ -167,7 +167,7 @@ func resourceRustackNetworkDelete(ctx context.Context, d *schema.ResourceData, m
 						router_port = port
 						continue
 					}
-					if strings.Contains(err.Error(), not_foud_error) {
+					if strings.Contains(err.Error(), not_found_error) {
 						continue
 					}
 					return diag.FromErr(err)

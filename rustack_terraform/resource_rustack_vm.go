@@ -86,6 +86,12 @@ func resourceRustackVmCreate(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("Error creating vm: %s", err)
 	}
 
+	newVm.WaitLock()
+	vm_power := d.Get("power").(bool)
+	if !vm_power {
+		newVm.PowerOff()
+	}
+
 	systemDisk := make([]interface{}, 1)
 	systemDisk[0] = map[string]interface{}{
 		"id":                 newVm.Disks[0].ID,
@@ -145,6 +151,7 @@ func resourceRustackVmRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("cpu", vm.Cpu)
 	d.Set("ram", vm.Ram)
 	d.Set("template_id", vm.Template.ID)
+	d.Set("power", vm.Power)
 
 	flattenDisks := make([]string, len(vm.Disks)-1)
 	for i, disk := range vm.Disks {
@@ -241,6 +248,12 @@ func resourceRustackVmUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 	if needPowerOn {
 		vm.PowerOn()
+	}
+	a := d.Get("power").(bool)
+	if a {
+		vm.PowerOn()
+	} else {
+		vm.PowerOff()
 	}
 
 	if diags := syncDisks(d, manager, targetVdc, vm); diags.HasError() {
@@ -360,10 +373,7 @@ func syncDisks(d *schema.ResourceData, manager *rustack.Manager, vdc *rustack.Vd
 
 func syncPorts(d *schema.ResourceData, manager *rustack.Manager, vdc *rustack.Vdc, vm *rustack.Vm) diag.Diagnostics {
 	// Delete disconnected ports and create a new if connected
-	portList := d.Get("port").([]interface{})
-	if portList != nil {
-		return nil
-	}
+
 	if err := manageVmPorts(d, manager); err != nil {
 		return diag.FromErr(err)
 	}
