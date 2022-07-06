@@ -329,7 +329,7 @@ func syncFloating(d *schema.ResourceData, router *rustack.Router) (err error) {
 		router.Floating = nil
 
 		if err = repeatOnError(router.Update, router); err != nil {
-			return
+			return fmt.Errorf("ERROR: Can't update Router: %s", err)
 		}
 	} else if floating.(bool) && (router.Floating != nil) {
 		d.Set("floating", true)

@@ -41,6 +41,7 @@ func dataSourceRustackVmsRead(ctx context.Context, d *schema.ResourceData, meta 
 			"ram":           vm.Ram,
 			"template_id":   vm.Template.ID,
 			"template_name": vm.Template.Name,
+			"power":         vm.Power,
 			"floating":      nil,
 			"floating_ip":   nil,
 		}
