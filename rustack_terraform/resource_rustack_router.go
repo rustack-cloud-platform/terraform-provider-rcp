@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -45,41 +44,51 @@ func resourceRustackRouterCreate(ctx context.Context, d *schema.ResourceData, me
 	return resourceRustackRouterRead(ctx, d, meta)
 }
 
-func resourceRustackRouterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRustackRouterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) (diagErr diag.Diagnostics) {
 	manager := meta.(*CombinedConfig).rustackManager()
 	router, err := manager.GetRouter(d.Id())
 	if err != nil {
-		return diag.Errorf("Error getting Router: %s", err)
+		diagErr = diag.Errorf("id: Error getting Router: %s", err)
+		return
 	}
 
 	d.SetId(router.ID)
 	d.Set("name", router.Name)
-	d.Set("floating", router.Floating)
+
+	d.Set("floating", router.Floating != nil)
+	d.Set("floating_ip", "")
 	if router.Floating != nil {
-		d.Set("floating_id", router.Floating.ID)
+		d.Set("floating_ip", router.Floating.IpAddress)
 	}
-	networks := []string{}
-	for _, port := range router.Ports {
-		networks = append(networks, port.Network.ID)
+
+	ports := make([]*string, len(router.Ports))
+	for i, port := range router.Ports {
+		ports[i] = &port.ID
 	}
-	d.Set("networks", networks)
+
+	d.Set("ports", ports)
 	d.Set("vdc_id", router.Vdc.Id)
 
-	return nil
+	return
 }
 
 func resourceRustackRouterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	manager := meta.(*CombinedConfig).rustackManager()
 	router, err := manager.GetRouter(d.Id())
 	if err != nil {
-		return diag.Errorf("Error getting Router: %s", err)
+		return diag.Errorf("id: Error getting Router: %s", err)
 	}
 	router.Name = d.Get("name").(string)
+
+	if d.HasChange("name") {
+		router.Rename(d.Get("name").(string))
+	}
+
 	if err := syncFloating(d, router); err != nil {
 		return diag.FromErr(err)
 	}
 
-	// Delete disconnected ports and create a new if connected
+	// Disconnect ports and connect new
 	err = syncRouterPorts(d, manager, router)
 	if err != nil {
 		return diag.FromErr(err)
@@ -90,19 +99,18 @@ func resourceRustackRouterUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceRustackRouterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	manager := meta.(*CombinedConfig).rustackManager()
+	portsIds := d.Get("ports").(*schema.Set).List()
 	routerId := d.Id()
 	router, err := manager.GetRouter(routerId)
-	targetVdc, err := GetVdcById(d, manager)
 	if err != nil {
-		return diag.Errorf("Error getting Router: %s", err)
+		return diag.Errorf("id: Error getting Router: %s", err)
 	}
 
+	// Disconnect custom ports from system router
 	if d.Get("system").(bool) {
-		network := GetServiseNetworkByVdc(targetVdc)
-		var newPort rustack.Port
-		newPort.Network = network
-		router.CreatePort(&newPort, router)
-		router.WaitLock()
+		if err != nil {
+			return diag.Errorf("Error getting service Network: %s", err)
+		}
 
 		for _, port := range router.Ports {
 			network, err := manager.GetNetwork(port.Network.ID)
@@ -110,8 +118,9 @@ func resourceRustackRouterDelete(ctx context.Context, d *schema.ResourceData, me
 				return diag.FromErr(err)
 			}
 			if !network.IsDefault {
-				if err = repeatOnError(port.Delete, port); err != nil {
-					return diag.Errorf("Error deleting Router: %s", err)
+				err = router.DisconnectPort(port)
+				if err != nil {
+					return diag.FromErr(err)
 				}
 			}
 			if router.Floating == nil {
@@ -125,10 +134,22 @@ func resourceRustackRouterDelete(ctx context.Context, d *schema.ResourceData, me
 		return nil
 	}
 
+	// Detach ports and delete custom router
+	for _, portId := range portsIds {
+		port, err := manager.GetPort(portId.(string))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		err = router.DisconnectPort(port)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
 	if err = repeatOnError(router.Delete, router); err != nil {
 		return diag.Errorf("Error deleting Router: %s", err)
 	}
-	
+
 	d.SetId("")
 	log.Printf("[INFO] Router deleted, ID: %s", routerId)
 
@@ -140,19 +161,24 @@ func setSetviceRouter(d *schema.ResourceData, manager *rustack.Manager) diag.Dia
 	if err != nil {
 		return diag.FromErr(err)
 	}
+
 	d.SetId(router.ID)
 	if router.Floating != nil {
 		d.Set("floating_id", router.Floating.ID)
 	}
 
-	flattenedRecords := make([]string, len(router.Ports))
-	for i, port := range router.Ports {
-		flattenedRecords[i] = port.Network.ID
+	portsIds := d.Get("ports").(*schema.Set).List()
+	ports := make([]*rustack.Port, len(portsIds))
+
+	for i, portId := range portsIds {
+		port, err := manager.GetPort(portId.(string))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		ports[i] = port
 	}
 
-	if err := d.Set("networks", flattenedRecords); err != nil {
-		return diag.Errorf("unable to set `networks` attribute: %s", err)
-	}
+	d.Set("ports", ports)
 
 	if err := syncFloating(d, router); err != nil {
 		return diag.FromErr(err)
@@ -166,10 +192,10 @@ func setSetviceRouter(d *schema.ResourceData, manager *rustack.Manager) diag.Dia
 func createRouter(d *schema.ResourceData, manager *rustack.Manager) (diagErr diag.Diagnostics) {
 	vdc, err := GetVdcById(d, manager)
 	if err != nil {
-		return diag.Errorf("Error getting Ports from vdc: %s", err)
+		return diag.Errorf("ports: Error getting Ports from vdc: %s", err)
 	}
-	if _, ok := d.GetOk("networks"); !ok {
-		return diag.Errorf("ERROR: You should setup a network for non default routers")
+	if _, ok := d.GetOk("ports"); !ok {
+		return diag.Errorf("ports: Error You should setup a port for non default routers")
 	}
 
 	var floatingIp *string = nil
@@ -180,9 +206,15 @@ func createRouter(d *schema.ResourceData, manager *rustack.Manager) (diagErr dia
 
 	router := rustack.NewRouter(d.Get("name").(string), floatingIp)
 
-	ports, err := preparePortsToConnect(manager, d)
-	if err != nil {
-		return diag.Errorf("Error getting errors: %s", err)
+	portsIds := d.Get("ports").(*schema.Set).List()
+	ports := make([]*rustack.Port, len(portsIds))
+
+	for i, portId := range portsIds {
+		port, err := manager.GetPort(portId.(string))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		ports[i] = port
 	}
 
 	router.Vdc.Id = vdc.ID
@@ -190,28 +222,6 @@ func createRouter(d *schema.ResourceData, manager *rustack.Manager) (diagErr dia
 	log.Printf("[DEBUG] Router create request: %#v", router)
 	vdc.WaitLock()
 
-	// Wait networks and routers of each ports
-	for _, port := range ports {
-		port.Network.WaitLock()
-		for {
-			networkCheck, err := manager.GetNetwork(port.Network.ID)
-			if err != nil {
-				return diag.Errorf("Error creating Router: %s", err)
-			}
-			if len(networkCheck.Subnets) != 0 {
-				networkCheck.Subnets[0].WaitLock()
-				break
-			}
-			time.Sleep(time.Second)
-		}
-		portRouter, err := getRouterByNetwork(*manager, *port.Network)
-		if err != nil {
-			return diag.Errorf("Error creating Router: %s", err)
-		}
-		if portRouter != nil {
-			portRouter.WaitLock()
-		}
-	}
 	err = vdc.CreateRouter(&router, ports...)
 	if err != nil {
 		return diag.Errorf("Error creating Router: %s", err)
@@ -249,64 +259,71 @@ func getSystemRouter(d *schema.ResourceData, manager *rustack.Manager) (router *
 	}
 
 	// Connect ports
-	ports, err := preparePortsToConnect(manager, d)
-	if err != nil {
-		return nil, fmt.Errorf("ERROR. getting ports: %s", err)
+
+	portsIds := d.Get("ports").(*schema.Set).List()
+	ports := make([]*rustack.Port, len(portsIds))
+
+	for _, portId := range portsIds {
+		port, err := manager.GetPort(portId.(string))
+		if err != nil {
+			return nil, err
+		}
+		ports = append(ports, port)
 	}
+
 	router.Ports = ports
 
 	return
 }
 
 func syncRouterPorts(d *schema.ResourceData, manager *rustack.Manager, router *rustack.Router) (err error) {
-	vdc, err := GetVdcById(d, manager)
-	if err != nil {
-		return fmt.Errorf("ERROR: Can't get Ports from vdc: %s", err)
-	}
-	// Connect ports
-	ports, err := preparePortsToConnect(manager, d)
-	if err != nil {
-		return fmt.Errorf("ERROR: Can't get ports: %s", err)
-	}
-	router.Ports = ports
-	if err = repeatOnError(router.Update, router); err != nil {
-		return fmt.Errorf("ERROR: Can't update Router: %s", err)
-	}
-	log.Printf("[INFO] Updated Router, ID: %v", router)
+	portsIds := d.Get("ports").(*schema.Set).List()
+	router_id := d.Id()
 
-	// disconnect ports
-	oldPortList := router.Ports
-	newPortList := d.Get("networks")
-	for _, s1 := range oldPortList {
+	for _, port := range router.Ports {
 		found := false
-		for _, s2 := range newPortList.(*schema.Set).List() {
-			if s1.Network.ID == s2 {
+		for _, portId := range portsIds {
+			if portId == port.ID {
 				found = true
 				break
 			}
 		}
-		if !found {
-			vdcPorts, err := vdc.GetPorts()
-			if err != nil {
-				return fmt.Errorf("ERROR: Can't get Ports from vdc: %s", err)
-			}
-			var portId string
-			for _, p := range vdcPorts {
-				if p.Connected != nil && p.Connected.ID == router.ID && p.Network.ID == s1.Network.ID {
-					portId = p.ID
-					break
-				}
-			}
-			if portId == "" {
-				return fmt.Errorf("ERROR: Port with current network=%s not found: %s", s1.Network.ID, err)
-			}
-			portToDelete, err := manager.GetPort(portId)
-			if err != nil {
-				return fmt.Errorf("ERROR: Port not found: %s", err)
-			}
 
-			if err = repeatOnError(portToDelete.ForceDelete, portToDelete); err != nil {
-				return fmt.Errorf("ERROR: One of the ports cannot be deleted: %s", err)
+		if !found {
+			if port.Connected != nil && port.Connected.ID == router_id {
+				log.Printf("Port %s found on vm and not mentioned in the state."+
+					" Port will be detached", port.ID)
+				router.DisconnectPort(port)
+				port.WaitLock()
+			}
+		}
+	}
+
+	for _, portId := range portsIds {
+		found := false
+		for _, port := range router.Ports {
+			if port.ID == portId {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			port, err := manager.GetPort(portId.(string))
+			if err != nil {
+				return fmt.Errorf("ports: getting Port from vdc")
+			}
+			if port.Connected != nil && port.Connected.Type == "vm_int" {
+				return fmt.Errorf("ports: Unable to bind a port that is already connected to the server")
+			}
+			if port.Connected != nil && port.Connected.ID != router_id {
+				router.DisconnectPort(port)
+				port.WaitLock()
+			}
+			port, err = manager.GetPort(portId.(string))
+			log.Printf("Port `%s` will be Attached", port.ID)
+			if err := router.ConnectPort(port, true); err != nil {
+				return fmt.Errorf("ERROR: Cannot attach port `%s`: %s", port.ID, err)
 			}
 		}
 	}
@@ -349,7 +366,7 @@ func preparePortsToConnect(manager *rustack.Manager, d *schema.ResourceData) (po
 
 		vdcPorts, err := vdc.GetPorts()
 		if err != nil {
-			return nil, fmt.Errorf("ERROR getting Ports from vdc")
+			return nil, fmt.Errorf("ports: Error getting Ports from vdc")
 		}
 
 		noRouter := false
@@ -364,7 +381,7 @@ func preparePortsToConnect(manager *rustack.Manager, d *schema.ResourceData) (po
 			return nil, err
 		}
 		if network.Vdc.Id != vdc.ID {
-			return nil, errors.New("ERROR: Network should belong to routers vdc")
+			return nil, errors.New("ports: Error Ports should belong to routers vdc")
 		}
 		var newPort rustack.Port
 		newPort.Network = network

@@ -9,6 +9,7 @@ func (args *Arguments) injectContextNetworkById() {
 	args.merge(Arguments{
 		"network_id": {
 			Type:        schema.TypeString,
+			ForceNew:    true,
 			Required:    true,
 			Description: "id of the Network",
 		},
@@ -32,7 +33,7 @@ func (args *Arguments) injectCreateNetwork() {
 			Required: true,
 			ValidateFunc: validation.All(
 				validation.NoZeroValues,
-				validation.StringLenBetween(2, 100),
+				validation.StringLenBetween(1, 100),
 			),
 			Description: "name of the Network",
 		},
@@ -53,29 +54,45 @@ func (args *Arguments) injectCreateNetwork() {
 						ForceNew:    true,
 						Required:    true,
 						Description: "cidr of the Subnet",
+						ValidateFunc: validation.All(
+							validation.NoZeroValues,
+							validation.StringLenBetween(1, 100),
+						),
 					},
 					"gateway": {
 						Type:        schema.TypeString,
-						ForceNew:    true,
 						Required:    true,
 						Description: "gateway of the Subnet",
+						ValidateFunc: validation.All(
+							validation.NoZeroValues,
+							validation.StringLenBetween(1, 100),
+						),
 					},
 					"start_ip": {
 						Type:        schema.TypeString,
-						ForceNew:    true,
 						Required:    true,
 						Description: "pool start ip of the Subnet",
+						ValidateFunc: validation.All(
+							validation.NoZeroValues,
+							validation.StringLenBetween(1, 100),
+						),
 					},
 					"end_ip": {
 						Type:        schema.TypeString,
-						ForceNew:    true,
 						Required:    true,
 						Description: "pool end ip of the Subnet",
+						ValidateFunc: validation.All(
+							validation.NoZeroValues,
+							validation.StringLenBetween(1, 100),
+						),
 					},
 					"dhcp": {
 						Type:        schema.TypeBool,
 						Required:    true,
 						Description: "enable dhcp service of the Subnet",
+						ValidateFunc: validation.All(
+							validation.NoZeroValues,
+						),
 					},
 					"dns": {
 						Type:        schema.TypeList,

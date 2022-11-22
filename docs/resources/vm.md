@@ -52,6 +52,13 @@ data "rustack_firewall_template" "allow_ssh" {
     name = "Разрешить SSH"
 }
 
+data "rustack_port" "vm_port" {
+    vdc_id = resource.rustack_vdc.single_vdc.id
+
+    network_id = resource.rustack_network.network.id
+    firewall_templates = [data.rustack_firewall_template.allow_default.id]
+}
+
 resource "rustack_vm" "vm1" {
     vdc_id = data.rustack_vdc.single_vdc.id
 
@@ -73,12 +80,8 @@ resource "rustack_vm" "vm1" {
         data.rustack_disk.new_disk2,
     ]
 
-    port {
-        network_id = data.rustack_network.service_network.id
-        firewall_templates = [data.rustack_firewall_template.allow_default.id,
-            data.rustack_firewall_template.allow_web.id,
-            data.rustack_firewall_template.allow_ssh.id
-        ]
+    ports {
+        data.rustack_port.vm_port
     }
 
     floating = false
@@ -92,7 +95,7 @@ resource "rustack_vm" "vm1" {
 - **cpu** (Number) the number of virtual cpus
 - **system_disk** System disk (Min: 1, Max: 1). 
 - **name** (String) name of the Vm
-- **port** (Block List, Min: 1, Max: 10) list of Ports attached to the Vm (see [below for nested schema](#nestedblock--port))
+- **ports** (List of String) list of Ports id attached to the Vm. 
 - **ram** (Number) memory of the Vm in gigabytes
 - **template_id** (String) id of the Template
 - **user_data** (String) script for cloud-init
@@ -105,6 +108,7 @@ resource "rustack_vm" "vm1" {
 - **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 - **disks** (Toset, String) list of Disks id attached to the Vm.
 
+
 ### Read-Only
 
 - **floating_ip** (String) floating ip for the Vm. May be omitted
@@ -116,27 +120,13 @@ Required:
 
 - **name** (String) name of the Disk
 - **size** (Number) the size of the Disk in gigabytes
-- **storage_profile_id** (String) the id of the StorageProfile
+- **storage_profile_id** (String) Id of the storage profile
+- **vdc_id** (String) id of the VDC
+
+Optional:
+
+- **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 Read-Only:
 
 - **id** (String) id of the Disk
-
-
-<a id="nestedblock--port"></a>
-### Nested Schema for `port`
-
-Required:
-
-- **firewall_templates** (List of String) list of firewall rule ids of the Port
-- **network_id** (String) id of the Network
-
-Read-Only:
-
-- **id** (String) id of the Port
-- **ip_address** (String) ip_address of the Port
-
-Optional:
-
-- **create** (String)
-- **delete** (String)
