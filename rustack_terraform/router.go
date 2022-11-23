@@ -59,7 +59,7 @@ func (args *Arguments) injectCreateRouter() {
 			Computed: true,
 			ValidateFunc: validation.All(
 				validation.NoZeroValues,
-				validation.StringLenBetween(2, 100),
+				validation.StringLenBetween(1, 100),
 			),
 			Description: "Name of the Router",
 		},
@@ -80,14 +80,13 @@ func (args *Arguments) injectCreateRouter() {
 			Computed:    true,
 			Description: "Floating id address.",
 		},
-		"networks": {
-			Type:     schema.TypeSet,
-			Optional: true,
-			Computed: true,
-			// TODO: setup limits
-			// MinItems:    1,
-			// MaxItems:    20,
-			Description: "list of networks",
+		"ports": {
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Computed:    true,
+			MinItems:    1,
+			MaxItems:    10,
+			Description: "List of Ports connected to the router",
 			Elem:        &schema.Schema{Type: schema.TypeString},
 		},
 		"system": {

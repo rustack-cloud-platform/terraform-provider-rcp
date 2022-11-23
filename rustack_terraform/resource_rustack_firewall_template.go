@@ -39,7 +39,7 @@ func resourceRustackFirewallTemplateCreate(ctx context.Context, d *schema.Resour
 	manager := meta.(*CombinedConfig).rustackManager()
 	targetVdc, err := GetVdcById(d, manager)
 	if err != nil {
-		return diag.Errorf("Error getting VDC: %s", err)
+		return diag.Errorf("vdc_id: Error getting VDC: %s", err)
 	}
 
 	newFirewallTemplate := rustack.NewFirewallTemplate(d.Get("name").(string))
@@ -88,7 +88,7 @@ func resourceRustackFirewallTemplateRead(ctx context.Context, d *schema.Resource
 	manager := meta.(*CombinedConfig).rustackManager()
 	firewallTemplate, err := manager.GetFirewallTemplate(d.Id())
 	if err != nil {
-		return diag.Errorf("Error getting Firewall Template: %s", err)
+		return diag.Errorf("id: Error getting Firewall Template: %s", err)
 	}
 	firewallRules, err := manager.GetFirewallRules(d.Id())
 	if err != nil {
@@ -109,12 +109,12 @@ func resourceRustackFirewallTemplateUpdate(ctx context.Context, d *schema.Resour
 
 	firewallTemplate, err := manager.GetFirewallTemplate(d.Id())
 	if err != nil {
-		return diag.Errorf("Error getting FirewallTemplate: %s", err)
+		return diag.Errorf("id: Error getting FirewallTemplate: %s", err)
 	}
 
 	if d.HasChange("name") {
 		if err = firewallTemplate.Rename(d.Get("name").(string)); err != nil {
-			return diag.Errorf("Error rename Firewall Template: %s", err)
+			return diag.Errorf("name: Error rename Firewall Template: %s", err)
 		}
 	}
 
@@ -227,7 +227,7 @@ func resourceRustackFirewallTemplateDelete(ctx context.Context, d *schema.Resour
 	manager := meta.(*CombinedConfig).rustackManager()
 	FirewallTemplate, err := manager.GetFirewallTemplate(d.Id())
 	if err != nil {
-		return diag.Errorf("Error getting FirewallTemplate: %s", err)
+		return diag.Errorf("id: Error getting FirewallTemplate: %s", err)
 	}
 
 	err = FirewallTemplate.Delete()

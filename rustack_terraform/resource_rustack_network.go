@@ -3,7 +3,6 @@ package rustack_terraform
 import (
 	"context"
 	"log"
-	"strings"
 
 	// "fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -36,7 +35,7 @@ func resourceRustackNetworkCreate(ctx context.Context, d *schema.ResourceData, m
 	manager := meta.(*CombinedConfig).rustackManager()
 	targetVdc, err := GetVdcById(d, manager)
 	if err != nil {
-		return diag.Errorf("Error getting VDC: %s", err)
+		return diag.Errorf("vdc_id: Error getting VDC: %s", err)
 	}
 
 	log.Printf("[DEBUG] subnetInfo: %#v", targetVdc)
@@ -62,12 +61,14 @@ func resourceRustackNetworkRead(ctx context.Context, d *schema.ResourceData, met
 	manager := meta.(*CombinedConfig).rustackManager()
 	network, err := manager.GetNetwork(d.Id())
 	if err != nil {
-		return diag.Errorf("Error getting network: %s", err)
+		return diag.Errorf("id: Error getting network: %s", err)
 	}
+
+	d.Set("name", network.Name)
 
 	subnets, err := network.GetSubnets()
 	if err != nil {
-		return diag.Errorf("Error getting subnets: %s", err)
+		return diag.Errorf("subnets: Error getting subnets: %s", err)
 	}
 
 	flattenedRecords := make([]map[string]interface{}, len(subnets))
@@ -76,7 +77,6 @@ func resourceRustackNetworkRead(ctx context.Context, d *schema.ResourceData, met
 		for i2, dns := range subnet.DnsServers {
 			dnsStrings[i2] = dns.DNSServer
 		}
-
 		flattenedRecords[i] = map[string]interface{}{
 			"id":       subnet.ID,
 			"cidr":     subnet.CIDR,
@@ -89,7 +89,7 @@ func resourceRustackNetworkRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err := d.Set("subnets", flattenedRecords); err != nil {
-		return diag.Errorf("unable to set `subnet` attribute: %s", err)
+		return diag.Errorf("subnets: unable to set `subnet` attribute: %s", err)
 	}
 
 	return nil
@@ -100,13 +100,13 @@ func resourceRustackNetworkUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	network, err := manager.GetNetwork(d.Id())
 	if err != nil {
-		return diag.Errorf("Error getting network: %s", err)
+		return diag.Errorf("id: Error getting network: %s", err)
 	}
 
 	if d.HasChange("name") {
 		err = network.Rename(d.Get("name").(string))
 		if err != nil {
-			return diag.Errorf("Error rename network: %s", err)
+			return diag.Errorf("name: Error rename network: %s", err)
 		}
 	}
 
@@ -124,65 +124,8 @@ func resourceRustackNetworkDelete(ctx context.Context, d *schema.ResourceData, m
 	manager := meta.(*CombinedConfig).rustackManager()
 	network, err := manager.GetNetwork(d.Id())
 	if err != nil {
-		return diag.Errorf("Error getting network: %s", err)
-	}
+		return diag.Errorf("id: Error getting network: %s", err)
 
-	// disconnect before delete
-	vdc, err := GetVdcById(d, manager)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	ports, err := vdc.GetPorts()
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	// we have to delete ports in the strict order
-	// first we should delete ports from vms then from routers
-	var router_port *rustack.Port
-	for j := 0; j < 15; j++ {
-		deleted := false
-		for _, port := range ports {
-			if port.Network.ID == network.ID {
-				if port.Connected.Type == "service" {
-					continue
-				} else if port.Connected.Type == "router" {
-					router, err := manager.GetRouter(port.Connected.ID)
-					if err != nil {
-						return diag.FromErr(err)
-					}
-					if router.Locked {
-						router.WaitLock()
-					}
-				} else if port.Connected.Type == "vm" {
-					vm, err := manager.GetVm(port.Connected.ID)
-					if err != nil {
-						return diag.FromErr(err)
-					}
-					if vm.Locked {
-						vm.WaitLock()
-					}
-				}
-				if err := port.ForceDelete(); err != nil {
-					if strings.Contains(err.Error(), ru_port_error) || strings.Contains(err.Error(), eng_port_error) {
-						router_port = port
-						continue
-					}
-					if strings.Contains(err.Error(), not_found_error) {
-						continue
-					}
-					return diag.FromErr(err)
-				}
-				deleted = true
-			}
-		}
-		if !deleted {
-			if router_port != nil {
-				if err := router_port.ForceDelete(); err != nil {
-					return diag.FromErr(err)
-				}
-			}
-			break
-		}
 	}
 
 	if err = repeatOnError(network.Delete, network); err != nil {
@@ -197,7 +140,7 @@ func createSubnet(d *schema.ResourceData, manager *rustack.Manager) (diagErr dia
 	log.Printf("[DEBUG] subnets: %#v", subnets)
 	network, err := manager.GetNetwork(d.Id())
 	if err != nil {
-		return diag.Errorf("Unable to get network: %s", err)
+		return diag.Errorf("id: Unable to get network: %s", err)
 	}
 
 	for _, subnetInfo := range subnets {
@@ -208,7 +151,7 @@ func createSubnet(d *schema.ResourceData, manager *rustack.Manager) (diagErr dia
 		subnet := rustack.NewSubnet(subnetInfo2["cidr"].(string), subnetInfo2["gateway"].(string), subnetInfo2["start_ip"].(string), subnetInfo2["end_ip"].(string), subnetInfo2["dhcp"].(bool))
 
 		if err := network.CreateSubnet(&subnet); err != nil {
-			return diag.Errorf("Error creating subnet: %s", err)
+			return diag.Errorf("subnets: Error creating subnet: %s", err)
 		}
 
 		dnsServersList := subnetInfo2["dns"].([]interface{})
@@ -219,7 +162,7 @@ func createSubnet(d *schema.ResourceData, manager *rustack.Manager) (diagErr dia
 		}
 
 		if err := subnet.UpdateDNSServers(dnsServers); err != nil {
-			return diag.Errorf("Error Update DNS Servers: %s", err)
+			return diag.Errorf("dns: Error Update DNS Servers: %s", err)
 		}
 
 		// TODO: Add Subnet Routes
@@ -233,28 +176,31 @@ func updateSubnet(d *schema.ResourceData, manager *rustack.Manager) (diagErr dia
 	subnets := d.Get("subnets").([]interface{})
 	network, err := manager.GetNetwork(d.Id())
 	if err != nil {
-		return diag.Errorf("Unable to get network: %s", err)
+		return diag.Errorf("id: Unable to get network: %s", err)
 	}
 	subnetsRaw, err := network.GetSubnets()
 	if err != nil {
-		return diag.Errorf("Unable to get subnets: %s", err)
+		return diag.Errorf("subnets: Unable to get subnets: %s", err)
 	}
 
 	for _, subnetInfo := range subnets {
 		subnetInfo2 := subnetInfo.(map[string]interface{})
 		for _, subnet := range subnetsRaw {
 			if subnet.ID == subnetInfo2["id"] {
+				if subnet.Gateway != subnetInfo2["gateway"] || subnet.StartIp != subnetInfo2["start_ip"] || subnet.EndIp != subnetInfo2["end_ip"] {
+					return diag.Errorf("You cannot change params (gateway, start_ip, end_ip)")
+				}
 				newDHCPValue := subnetInfo2["dhcp"].(bool)
 				if subnet.IsDHCP != newDHCPValue {
 					if newDHCPValue {
 						err = subnet.EnableDHCP()
 						if err != nil {
-							return diag.Errorf("Unable to toggle DHCP: %s", err)
+							return diag.Errorf("dhcp: Unable to toggle DHCP: %s", err)
 						}
 					} else {
 						err = subnet.DisableDHCP()
 						if err != nil {
-							return diag.Errorf("Unable to toggle DHCP: %s", err)
+							return diag.Errorf("dhcp: Unable to toggle DHCP: %s", err)
 						}
 					}
 				}

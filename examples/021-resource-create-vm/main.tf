@@ -66,6 +66,16 @@ data "rustack_disk" "new_disk2" {
     name = "Disk 2"
 }
 
+resource "rustack_port" "vm_port" {
+    vdc_id = resource.rustack_vdc.vdc1.id
+    network_id = data.rustack_network.service_network.id
+    firewall_templates = [
+        data.rustack_firewall_template.allow_default.id,
+        data.rustack_firewall_template.allow_web.id,
+        data.rustack_firewall_template.allow_ssh.id
+    ]
+}
+
 resource "rustack_vm" "vm1" {
     vdc_id = data.rustack_vdc.single_vdc.id
 
@@ -87,13 +97,9 @@ resource "rustack_vm" "vm1" {
         data.rustack_disk.new_disk2.id,
     ]
 
-    port {
-        network_id = data.rustack_network.service_network.id
-        firewall_templates = [data.rustack_firewall_template.allow_default.id,
-            data.rustack_firewall_template.allow_web.id,
-            data.rustack_firewall_template.allow_ssh.id
-        ]
-    }
+    ports = [
+        resource.rustack_port.vm_port.id
+    ]
 
     floating = false
 }

@@ -47,7 +47,7 @@ func resourceRustackProjectCreate(ctx context.Context, d *schema.ResourceData, m
 	log.Printf("[DEBUG] Project create request: %#v", project)
 	err = client.CreateProject(&project)
 	if err != nil {
-		return diag.Errorf("Error creating project: %s", err)
+		return diag.Errorf("id: Error creating project: %s", err)
 	}
 
 	d.SetId(project.ID)
@@ -60,7 +60,7 @@ func resourceRustackProjectRead(ctx context.Context, d *schema.ResourceData, met
 	manager := meta.(*CombinedConfig).rustackManager()
 	project, err := manager.GetProject(d.Id())
 	if err != nil {
-		return diag.Errorf("Error getting project: %s", err)
+		return diag.Errorf("id: Error getting project: %s", err)
 	}
 
 	d.SetId(project.ID)
@@ -74,12 +74,12 @@ func resourceRustackProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	project, err := manager.GetProject(d.Id())
 	if err != nil {
-		return diag.Errorf("Error getting project: %s", err)
+		return diag.Errorf("id: Error getting project: %s", err)
 	}
 
 	err = project.Rename(d.Get("name").(string))
 	if err != nil {
-		return diag.Errorf("Error rename project: %s", err)
+		return diag.Errorf("name: Error rename project: %s", err)
 	}
 
 	log.Printf("[INFO] Updated Project, ID: %#v", project)
@@ -94,9 +94,9 @@ func resourceRustackProjectDelete(ctx context.Context, d *schema.ResourceData, m
 
 	project, err := manager.GetProject(projectId)
 	if err != nil {
-		return diag.Errorf("Error getting project: %s", err)
+		return diag.Errorf("id: Error getting project: %s", err)
 	}
-	
+
 	err = project.Delete()
 	if err != nil {
 		return diag.Errorf("Error deleting project: %s", err)

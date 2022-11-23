@@ -46,6 +46,8 @@ func Provider() *schema.Provider {
 			"rustack_vms":                dataSourceRustackVms(),               // 023-data-get-vms
 			"rustack_router":             dataSourceRustackRouter(),            // 025-data-get-router +
 			"rustack_routers":            dataSourceRustackRouters(),           // 026-data-get-routers +
+			"rustack_port":               dataSourceRustackPort(),              // 026-data-get-port +
+			"rustack_ports":              dataSourceRustackPorts(),             // 026-data-get-ports +
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
@@ -56,6 +58,7 @@ func Provider() *schema.Provider {
 			"rustack_vm":                resourceRustackVm(),               // 021-resource-create-vm +
 			"rustack_firewall_template": resourceRustackFirewallTemplate(), // 024-resource-create-firewall-template +
 			"rustack_router":            resourceRustackRouter(),           // 027-resource-create-router +
+			"rustack_port":              resourceRustackPort(),             // 027-resource-create-port +
 		},
 	}
 
