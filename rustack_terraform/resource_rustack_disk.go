@@ -36,12 +36,12 @@ func resourceRustackDiskCreate(ctx context.Context, d *schema.ResourceData, meta
 	manager := meta.(*CombinedConfig).rustackManager()
 	targetVdc, err := GetVdcById(d, manager)
 	if err != nil {
-		return diag.Errorf("Error getting VDC: %s", err)
+		return diag.Errorf("vdc_id: Error getting VDC: %s", err)
 	}
 
 	targetStorageProfile, err := GetStorageProfileById(d, manager, targetVdc, nil)
 	if err != nil {
-		return diag.Errorf("Error getting storage profile: %s", err)
+		return diag.Errorf("storage_profile: Error getting storage profile: %s", err)
 	}
 
 	newDisk := rustack.NewDisk(d.Get("name").(string), d.Get("size").(int), targetStorageProfile)
@@ -61,7 +61,7 @@ func resourceRustackDiskRead(ctx context.Context, d *schema.ResourceData, meta i
 	manager := meta.(*CombinedConfig).rustackManager()
 	disk, err := manager.GetDisk(d.Id())
 	if err != nil {
-		return diag.Errorf("Error getting disk: %s", err)
+		return diag.Errorf("id: Error getting disk: %s", err)
 	}
 
 	d.SetId(disk.ID)
@@ -73,23 +73,22 @@ func resourceRustackDiskRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceRustackDiskUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	manager := meta.(*CombinedConfig).rustackManager()
-
 	disk, err := manager.GetDisk(d.Id())
 	if err != nil {
-		return diag.Errorf("Error getting disk: %s", err)
+		return diag.Errorf("id: Error getting disk: %s", err)
 	}
 
 	if d.HasChange("name") {
 		err = disk.Rename(d.Get("name").(string))
 		if err != nil {
-			return diag.Errorf("Error rename disk: %s", err)
+			return diag.Errorf("name: Error rename disk: %s", err)
 		}
 	}
 
 	if d.HasChange("size") {
 		err = disk.Resize(d.Get("size").(int))
 		if err != nil {
-			return diag.Errorf("Error resizing disk: %s", err)
+			return diag.Errorf("size: Error resizing disk: %s", err)
 		}
 	}
 
@@ -101,12 +100,12 @@ func resourceRustackDiskUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		targetStorageProfile, err := GetStorageProfileById(d, manager, targetVdc, nil)
 		if err != nil {
-			return diag.Errorf("Error getting storage profile: %s", err)
+			return diag.Errorf("storage_profile: Error getting storage profile: %s", err)
 		}
 
 		err = disk.UpdateStorageProfile(*targetStorageProfile)
 		if err != nil {
-			return diag.Errorf("Error updating storage: %s", err)
+			return diag.Errorf("storage_profile: Error updating storage: %s", err)
 		}
 	}
 
@@ -117,7 +116,7 @@ func resourceRustackDiskDelete(ctx context.Context, d *schema.ResourceData, meta
 	manager := meta.(*CombinedConfig).rustackManager()
 	disk, err := manager.GetDisk(d.Id())
 	if err != nil {
-		return diag.Errorf("Error getting disk: %s", err)
+		return diag.Errorf("id: Error getting disk: %s", err)
 	}
 
 	if disk.Vm != nil {

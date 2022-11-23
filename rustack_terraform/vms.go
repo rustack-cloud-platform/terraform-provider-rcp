@@ -16,12 +16,6 @@ func (args *Arguments) injectContextVmByName() {
 }
 
 func (args *Arguments) injectCreateVm() {
-	diskCreation := Defaults()
-	diskCreation.injectCreateDisk()
-
-	portCreation := Defaults()
-	portCreation.injectCreatePort()
-
 	systemDisk := Defaults()
 	systemDisk.injectSystemDisk()
 
@@ -31,7 +25,7 @@ func (args *Arguments) injectCreateVm() {
 			Required: true,
 			ValidateFunc: validation.All(
 				validation.NoZeroValues,
-				validation.StringLenBetween(2, 100),
+				validation.StringLenBetween(1, 100),
 			),
 			Description: "name of the Vm",
 		},
@@ -75,13 +69,13 @@ func (args *Arguments) injectCreateVm() {
 			Description: "list of Disks attached to the Vm",
 			Elem:        &schema.Schema{Type: schema.TypeString},
 		},
-		"port": {
-			Type:        schema.TypeList,
+		"ports": {
+			Type:        schema.TypeSet,
 			Optional:    true,
 			MinItems:    1,
 			MaxItems:    10,
-			Description: "list of Ports attached to the Vm",
-			Elem:        &schema.Resource{Schema: portCreation},
+			Description: "List of Ports connected to the Vm",
+			Elem:        &schema.Schema{Type: schema.TypeString},
 		},
 		"floating": {
 			Type:        schema.TypeBool,

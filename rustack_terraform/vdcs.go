@@ -24,7 +24,7 @@ func (args *Arguments) injectCreateVdc() {
 			Required: true,
 			ValidateFunc: validation.All(
 				validation.NoZeroValues,
-				validation.StringLenBetween(2, 100),
+				validation.StringLenBetween(1, 100),
 			),
 			Description: "name of the VDC",
 		},

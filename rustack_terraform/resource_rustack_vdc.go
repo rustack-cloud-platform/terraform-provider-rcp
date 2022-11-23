@@ -35,12 +35,12 @@ func resourceRustackVdcCreate(ctx context.Context, d *schema.ResourceData, meta 
 	manager := meta.(*CombinedConfig).rustackManager()
 	targetProject, err := manager.GetProject(d.Get("project_id").(string))
 	if err != nil {
-		return diag.Errorf("Error getting project: %s", err)
+		return diag.Errorf("project_id: Error getting project: %s", err)
 	}
 
 	targetHypervisor, err := GetHypervisorById(d, manager, targetProject)
 	if err != nil {
-		return diag.Errorf("Error getting Hypervisor: %s", err)
+		return diag.Errorf("hypervisor_idЖ Error getting Hypervisor: %s", err)
 	}
 
 	vdc := rustack.NewVdc(d.Get("name").(string), targetHypervisor)
@@ -63,7 +63,7 @@ func resourceRustackVdcRead(ctx context.Context, d *schema.ResourceData, meta in
 	manager := meta.(*CombinedConfig).rustackManager()
 	vdc, err := manager.GetVdc(d.Id())
 	if err != nil {
-		return diag.Errorf("Error getting vdc: %s", err)
+		return diag.Errorf("id: Error getting vdc: %s", err)
 	}
 
 	flattenedProject := map[string]interface{}{
@@ -85,12 +85,12 @@ func resourceRustackVdcUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	vdc, err := manager.GetVdc(d.Id())
 	if err != nil {
-		return diag.Errorf("Error getting vdc: %s", err)
+		return diag.Errorf("id: Error getting vdc: %s", err)
 	}
 
 	err = vdc.Rename(d.Get("name").(string))
 	if err != nil {
-		return diag.Errorf("Error rename vdc: %s", err)
+		return diag.Errorf("name: Error rename vdc: %s", err)
 	}
 
 	return resourceRustackVdcRead(ctx, d, meta)
@@ -100,7 +100,7 @@ func resourceRustackVdcDelete(ctx context.Context, d *schema.ResourceData, meta 
 	manager := meta.(*CombinedConfig).rustackManager()
 	vdc, err := manager.GetVdc(d.Id())
 	if err != nil {
-		return diag.Errorf("Error getting vdc: %s", err)
+		return diag.Errorf("id: Error getting vdc: %s", err)
 	}
 
 	err = vdc.Delete()

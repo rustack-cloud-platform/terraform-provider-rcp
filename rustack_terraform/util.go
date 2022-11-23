@@ -364,12 +364,42 @@ func repeatOnError(f func() error, targerInterface interface{ WaitLock() error }
 	return
 }
 
-func GetServiseNetworkByVdc(vdc *rustack.Vdc) (network *rustack.Network) {
-	allNetworks, _ := vdc.GetNetworks()
+func GetServiseNetworkByVdc(vdc *rustack.Vdc) (*rustack.Network, error) {
+	allNetworks, err := vdc.GetNetworks()
+	if err != nil {
+		return nil, err
+	}
 	for _, network := range allNetworks {
 		if network.IsDefault {
-			return network
+			return network, nil
 		}
 	}
-	return
+	err = errors.New("Cant find service network")
+	return nil, err
+}
+
+func GetPortById(d *schema.ResourceData, manager *rustack.Manager, vdc *rustack.Vdc) (*rustack.Port, error) {
+	portId := d.Get("id")
+	port, err := manager.GetPort(portId.(string))
+	if err != nil {
+		return nil, errors.Wrapf(err, "VDC with id '%s' not found", portId)
+	}
+
+	return port, nil
+}
+
+func GetPortByIp(d *schema.ResourceData, manager *rustack.Manager, vdc *rustack.Vdc) (*rustack.Port, error) {
+	portIp := d.Get("ip_address")
+	allPorts, err := vdc.GetPorts()
+	if err != nil {
+		return nil, err
+	}
+	for _, port := range allPorts {
+		if *port.IpAddress == portIp {
+			return port, nil
+		}
+	}
+
+	err = errors.New("Cant find port with this ip")
+	return nil, err
 }
