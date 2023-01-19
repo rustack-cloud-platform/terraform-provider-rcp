@@ -35,7 +35,7 @@ func dataSourceRustackHypervisorRead(ctx context.Context, d *schema.ResourceData
 		"id":         targetHypervisor.ID,
 		"name":       targetHypervisor.Name,
 		"type":       targetHypervisor.Type,
-		"project_id": nil,
+		"project_id": targetProject.ID,
 	}
 
 	if err := setResourceDataFromMap(d, flatten); err != nil {

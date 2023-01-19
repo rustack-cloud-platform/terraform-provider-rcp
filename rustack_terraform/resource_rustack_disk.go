@@ -50,6 +50,7 @@ func resourceRustackDiskCreate(ctx context.Context, d *schema.ResourceData, meta
 	if err != nil {
 		return diag.Errorf("Error creating disk: %s", err)
 	}
+	newDisk.WaitLock()
 
 	d.SetId(newDisk.ID)
 	log.Printf("[INFO] Disk created, ID: %s", d.Id())
@@ -108,6 +109,8 @@ func resourceRustackDiskUpdate(ctx context.Context, d *schema.ResourceData, meta
 			return diag.Errorf("storage_profile: Error updating storage: %s", err)
 		}
 	}
+	
+	disk.WaitLock()
 
 	return resourceRustackDiskRead(ctx, d, meta)
 }
@@ -133,6 +136,7 @@ func resourceRustackDiskDelete(ctx context.Context, d *schema.ResourceData, meta
 	if err != nil {
 		return diag.Errorf("Error deleting disk: %s", err)
 	}
+	disk.WaitLock()
 
 	return nil
 }

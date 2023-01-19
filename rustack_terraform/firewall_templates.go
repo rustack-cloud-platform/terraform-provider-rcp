@@ -5,21 +5,31 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+
 func (args *Arguments) injectContextFirewallTemplateByName() {
 	args.merge(Arguments{
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
+			ForceNew:    true,
 			Description: "name of the Firewall Template",
 		},
 	})
 }
 
+
+func (args *Arguments) injectContextFirewallTemplateById() {
+	args.merge(Arguments{
+		"firewall_id": {
+			Type:        schema.TypeString,
+			Required:    true,
+			ForceNew:    true,
+			Description: "id of the Firewall Template",
+		},
+	})
+}
+
 func (args *Arguments) injectResultFirewallTemplate() {
-	ingressRule := Defaults()
-	ingressRule.injectCreateFirewallRule()
-	egressRule := Defaults()
-	egressRule.injectCreateFirewallRule()
 
 	args.merge(Arguments{
 		"id": {
@@ -31,28 +41,6 @@ func (args *Arguments) injectResultFirewallTemplate() {
 			Type:        schema.TypeString,
 			Computed:    true,
 			Description: "name of the Firewall Template",
-		},
-		"ingress_rule": {
-			Type:     schema.TypeList,
-			Optional: true,
-			// TODO: setup limits
-			MinItems:    0,
-			MaxItems:    20,
-			Description: "list of ingress rules",
-			Elem: &schema.Resource{
-				Schema: ingressRule,
-			},
-		},
-		"egress_rule": {
-			Type:     schema.TypeList,
-			Optional: true,
-			// TODO: setup limits
-			MinItems:    0,
-			MaxItems:    20,
-			Description: "list of egress rules",
-			Elem: &schema.Resource{
-				Schema: egressRule,
-			},
 		},
 	})
 }
@@ -73,11 +61,6 @@ func (args *Arguments) injectResultListFirewallTemplate() {
 }
 
 func (args *Arguments) injectCreateFirewallTemplate() {
-	ingressRule := Defaults()
-	ingressRule.injectCreateFirewallRule()
-	egressRule := Defaults()
-	egressRule.injectCreateFirewallRule()
-
 	args.merge(Arguments{
 		"id": {
 			Type:        schema.TypeString,
@@ -92,28 +75,6 @@ func (args *Arguments) injectCreateFirewallTemplate() {
 				validation.StringLenBetween(1, 100),
 			),
 			Description: "name of the firewall template",
-		},
-		"ingress_rule": {
-			Type:     schema.TypeList,
-			Optional: true,
-			// TODO: setup limits
-			MinItems:    0,
-			MaxItems:    20,
-			Description: "list of ingress rules",
-			Elem: &schema.Resource{
-				Schema: ingressRule,
-			},
-		},
-		"egress_rule": {
-			Type:     schema.TypeList,
-			Optional: true,
-			// TODO: setup limits
-			MinItems:    0,
-			MaxItems:    20,
-			Description: "list of egress rules",
-			Elem: &schema.Resource{
-				Schema: egressRule,
-			},
 		},
 	})
 }

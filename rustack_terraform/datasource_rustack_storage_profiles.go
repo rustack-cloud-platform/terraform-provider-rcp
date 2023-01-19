@@ -42,12 +42,10 @@ func dataSourceRustackStorageProfilesRead(ctx context.Context, d *schema.Resourc
 
 	hash, err := hashstructure.Hash(storageProfiles, hashstructure.FormatV2, nil)
 	if err != nil {
-		diag.Errorf("unable to set `networks` attribute: %s", err)
+		diag.Errorf("unable to set `storage_profiles` attribute: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("storage_profiles/%d", hash))
-	// d.Set("vdc_id", nil)
-	// d.Set("vdc_name", nil)
 
 	if err := d.Set("storage_profiles", flattenedStorageProfiles); err != nil {
 		return diag.Errorf("unable to set `storage_profiles` attribute: %s", err)

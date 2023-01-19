@@ -10,7 +10,6 @@ import (
 	"github.com/pilat/rustack-go/rustack"
 )
 
-const code = "    !_ABOBA_"
 
 func resourceRustackVm() *schema.Resource {
 	args := Defaults()
@@ -272,11 +271,13 @@ func resourceRustackVmDelete(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 	}
+	vm.WaitLock()
 
 	err = vm.Delete()
 	if err != nil {
 		return diag.Errorf("Error deleting vm: %s", err)
 	}
+	vm.WaitLock()
 
 	return nil
 }

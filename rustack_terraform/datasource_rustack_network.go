@@ -10,7 +10,7 @@ import (
 func dataSourceRustackNetwork() *schema.Resource {
 	args := Defaults()
 	args.injectResultNetwork()
-	args.injectContextVdcById()
+	args.injectContextVdcByIdForData()
 	args.injectContextNetworkByName() // override "name"
 
 	return &schema.Resource{

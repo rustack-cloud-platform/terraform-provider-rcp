@@ -64,6 +64,7 @@ func resourceRustackPortCreate(ctx context.Context, d *schema.ResourceData, meta
 	if err = targetVdc.CreateEmptyPort(&newPort); err != nil {
 		return diag.Errorf("Error creating port: %s", err)
 	}
+	newPort.WaitLock()
 	d.SetId(newPort.ID)
 	fmt.Println(ipAddressStr)
 	log.Printf("[INFO] Port created, ID: %s", d.Id())
@@ -124,14 +125,15 @@ func resourceRustackPortUpdate(ctx context.Context, d *schema.ResourceData, meta
 			return diag.FromErr(err)
 		}
 	}
+	port.WaitLock()
 	return resourceRustackPortRead(ctx, d, meta)
 }
 
 func resourceRustackPortDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	manager := meta.(*CombinedConfig).rustackManager()
 	portId := d.Id()
-	port, err := manager.GetPort(portId)
 
+	port, err := manager.GetPort(portId)
 	if err != nil {
 		return diag.Errorf("id: Error getting port: %s", err)
 	}
@@ -140,6 +142,7 @@ func resourceRustackPortDelete(ctx context.Context, d *schema.ResourceData, meta
 	if err != nil {
 		return diag.Errorf("Error deleting port: %s", err)
 	}
+	port.WaitLock()
 
 	d.SetId("")
 	log.Printf("[INFO] Port deleted, ID: %s", portId)

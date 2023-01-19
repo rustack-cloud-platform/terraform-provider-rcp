@@ -34,15 +34,3 @@ data "rustack_firewall_template" "single_template" {
 ### Read-Only
 
 - **id** (String) id of the Template
-- **egress_rule** (String)
-    **id** (String)
-    **name** (String)
-    **protocol** (String)
-    **port_range** (String)
-    **destination_ip** (String)
-- **ingress_rule** (String)
-    **id** (String)
-    **name** (String)
-    **protocol** (String)
-    **port_range** (String)
-    **destination_ip** (String)

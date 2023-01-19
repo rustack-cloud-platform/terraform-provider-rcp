@@ -13,12 +13,6 @@ func (args *Arguments) injectCreateVdc() {
 			ForceNew:    true,
 			Description: "id of the Project",
 		},
-		"hypervisor_id": {
-			Type:        schema.TypeString,
-			Required:    true,
-			ForceNew:    true,
-			Description: "id of the Hypervisor",
-		},
 		"name": {
 			Type:     schema.TypeString,
 			Required: true,
@@ -37,6 +31,16 @@ func (args *Arguments) injectContextVdcById() {
 			Type:        schema.TypeString,
 			Required:    true,
 			ForceNew:    true,
+			Description: "id of the VDC",
+		},
+	})
+}
+
+func (args *Arguments) injectContextVdcByIdForData() {
+	args.merge(Arguments{
+		"vdc_id": {
+			Type:        schema.TypeString,
+			Required:    true,
 			Description: "id of the VDC",
 		},
 	})

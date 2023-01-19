@@ -22,6 +22,12 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.EnvDefaultFunc("RUSTACK_API_URL", "https://cp.sbcloud.ru"),
 				Description: "The URL to use for the Rustack API.",
 			},
+			"client_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("RUSTACK_CLIENT_ID", nil),
+				Description: "The client id to use for managing instances.",
+			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"rustack_account": dataSourceRustackAccount(),
@@ -46,19 +52,33 @@ func Provider() *schema.Provider {
 			"rustack_vms":                dataSourceRustackVms(),               // 023-data-get-vms
 			"rustack_router":             dataSourceRustackRouter(),            // 025-data-get-router +
 			"rustack_routers":            dataSourceRustackRouters(),           // 026-data-get-routers +
-			"rustack_port":               dataSourceRustackPort(),              // 026-data-get-port +
-			"rustack_ports":              dataSourceRustackPorts(),             // 026-data-get-ports +
+			"rustack_port":               dataSourceRustackPort(),              // 027-data-get-port +
+			"rustack_ports":              dataSourceRustackPorts(),             // 027-data-get-ports +
+			"rustack_dns":                dataSourceRustackDns(),               // 028-data-get-dns +
+			"rustack_dnss":               dataSourceRustackDnss(),              // 028-data-get-dnss +
+			"rustack_lbaas":              dataSourceRustackLbaas(),             // 028-data-get-lbaas +
+			"rustack_lbaass":             dataSourceRustackLoadBalancers(),     // 028-data-get-lbaass +
+			"rustack_s3":                 dataSourceRustackLoadBalancers(),     // 028-data-get-lbaass +
+			"rustack_s3_storage":         dataSourceRustackS3Storage(),     	// 028-data-get-s3-storage +
+			"rustack_s3_storages":        dataSourceRustackS3Storages(),     	// 028-data-get-s3-storages +
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"rustack_project":           resourceRustackProject(),          // 001-resource-create-project +
-			"rustack_vdc":               resourceRustackVdc(),              // 006-resource-create-vdc +
-			"rustack_network":           resourceRustackNetwork(),          // 009-resource-create-network +
-			"rustack_disk":              resourceRustackDisk(),             // 014-resource-create-disk +
-			"rustack_vm":                resourceRustackVm(),               // 021-resource-create-vm +
-			"rustack_firewall_template": resourceRustackFirewallTemplate(), // 024-resource-create-firewall-template +
-			"rustack_router":            resourceRustackRouter(),           // 027-resource-create-router +
-			"rustack_port":              resourceRustackPort(),             // 027-resource-create-port +
+			"rustack_project":                resourceRustackProject(),          // 001-resource-create-project +
+			"rustack_vdc":                    resourceRustackVdc(),              // 006-resource-create-vdc +
+			"rustack_network":                resourceRustackNetwork(),          // 009-resource-create-network +
+			"rustack_disk":                   resourceRustackDisk(),             // 014-resource-create-disk +
+			"rustack_vm":                     resourceRustackVm(),               // 021-resource-create-vm +
+			"rustack_firewall_template":      resourceRustackFirewallTemplate(), // 024-resource-create-firewall-template +
+			"rustack_router":                 resourceRustackRouter(),           // 027-resource-create-router +
+			"rustack_port":                   resourceRustackPort(),             // 027-resource-create-port +
+			"rustack_dns":                    resourceRustackDns(),              // 028-resource-create-dns +
+			"rustack_dns_record":             resourceRustackDnsRecord(),        // 028-resource-create-dns-record +
+			"rustack_firewall_template_rule": resourceRustackFirewallRule(),     // 029-resource-create-firewall-rule +
+			"rustack_lbaas":                  resourceRustackLbaas(),            // 029-resource-create-lbaas +
+			"rustack_lbaas_pool":             resourceRustackLbaasPool(),        // 029-resource-create-lbaas-pool +
+			"rustack_s3_storage":             resourceRustackS3Storage(),        // 029-resource-create-s3-storage +
+			"rustack_s3_storage_bucket":      resourceRustackS3StorageBucket(),  // 029-resource-create-s3-storage-bucket +
 		},
 	}
 
@@ -79,6 +99,7 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 	config := Config{
 		Token:            d.Get("token").(string),
 		APIEndpoint:      d.Get("api_endpoint").(string),
+		ClientID:         d.Get("client_id").(string),
 		TerraformVersion: terraformVersion,
 	}
 

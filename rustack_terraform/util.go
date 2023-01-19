@@ -403,3 +403,100 @@ func GetPortByIp(d *schema.ResourceData, manager *rustack.Manager, vdc *rustack.
 	err = errors.New("Cant find port with this ip")
 	return nil, err
 }
+
+func GetDnsByName(d *schema.ResourceData, manager *rustack.Manager) (*rustack.Dns, error) {
+	dnsName := d.Get("name").(string)
+	project, err := manager.GetProject(d.Get("project_id").(string))
+	if err != nil {
+		return nil, errors.Wrap(err, "Error getting project by id")
+	}
+
+	dnss, err := project.GetDnss()
+	if err != nil {
+		return nil, errors.Wrap(err, "Error getting list of dns")
+	}
+
+	for _, dns := range dnss {
+		if strings.EqualFold(dns.Name, dnsName) {
+			return dns, nil
+		}
+	}
+
+	return nil, fmt.Errorf("ERROR: Dns with name '%s' not found", dnsName)
+
+}
+
+func GetDnsById(d *schema.ResourceData, manager *rustack.Manager) (*rustack.Dns, error) {
+	dnsid := d.Get("id").(string)
+	dns, err := manager.GetDnss()
+
+	if err != nil {
+		return nil, errors.Wrap(err, "Error getting list of dns")
+	}
+
+	for _, dns := range dns {
+		if strings.EqualFold(dns.ID, dnsid) {
+			return dns, nil
+		}
+	}
+
+	return nil, fmt.Errorf("ERROR: Dns with id '%s' not found", dnsid)
+
+}
+
+func GetLbaasByName(d *schema.ResourceData, manager *rustack.Manager, vdc *rustack.Vdc) (*rustack.LoadBalancer, error) {
+	lbaasName := d.Get("name")
+	lbs, err := vdc.GetLoadBalancers(rustack.Arguments{"name": lbaasName.(string)})
+
+	if err != nil {
+		return nil, errors.Wrap(err, "Error getting list of lbs")
+	}
+
+	for _, lb := range lbs {
+		if lb.Name == lbaasName {
+			return lb, nil
+		}
+	}
+
+	return nil, fmt.Errorf("Load Balancer with name '%s' not found in vdc '%s'", lbaasName, vdc.Name)
+}
+
+func GetS3ByName(d *schema.ResourceData, manager *rustack.Manager) (*rustack.S3Storage, error) {
+	s3_name := d.Get("name").(string)
+	project, err := manager.GetProject(d.Get("project_id").(string))
+	if err != nil {
+		return nil, errors.Wrap(err, "Error getting project by id")
+	}
+
+	storages, err := project.GetS3Storages()
+	if err != nil {
+		return nil, errors.Wrap(err, "Error getting list of dns")
+	}
+
+	for _, s3 := range storages {
+		if strings.EqualFold(s3.Name, s3_name) {
+			return s3, nil
+		}
+	}
+
+	return nil, fmt.Errorf("ERROR: Dns with name '%s' not found", s3_name)
+
+}
+
+func GetS3ById(d *schema.ResourceData, manager *rustack.Manager) (*rustack.S3Storage, error) {
+	s3_id := d.Get("id").(string)
+	storages, err := manager.GetS3Storages()
+
+	if err != nil {
+		return nil, errors.Wrap(err, "Error getting list of dns")
+	}
+
+	for _, s3 := range storages {
+		if strings.EqualFold(s3.ID, s3_id) {
+			return s3, nil
+		}
+	}
+
+	return nil, fmt.Errorf("ERROR: Dns with id '%s' not found", s3_id)
+
+}
