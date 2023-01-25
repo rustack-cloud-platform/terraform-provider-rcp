@@ -35,9 +35,10 @@ func dataSourceRustackHypervisorsRead(ctx context.Context, d *schema.ResourceDat
 	flattenedHypervisors := make([]map[string]interface{}, len(hypervisors))
 	for i, hypervisor := range hypervisors {
 		flattenedHypervisors[i] = map[string]interface{}{
-			"id":   hypervisor.ID,
-			"name": hypervisor.Name,
-			"type": hypervisor.Type,
+			"id":         hypervisor.ID,
+			"name":       hypervisor.Name,
+			"type":       hypervisor.Type,
+			"project_id": targetProject.ID,
 		}
 	}
 

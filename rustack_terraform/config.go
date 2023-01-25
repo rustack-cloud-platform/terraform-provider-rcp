@@ -13,6 +13,7 @@ type Config struct {
 	Token            string
 	APIEndpoint      string
 	TerraformVersion string
+	ClientID         string
 }
 
 type CombinedConfig struct {
@@ -28,6 +29,7 @@ func (c *Config) Client() (*CombinedConfig, diag.Diagnostics) {
 	manager := rustack.NewManager(c.Token)
 	manager.Logger = logger
 	manager.BaseURL = strings.TrimSuffix(c.APIEndpoint, "/")
+	manager.ClientID = c.ClientID
 	manager.UserAgent = fmt.Sprintf("Terraform/%s", c.TerraformVersion)
 
 	return &CombinedConfig{

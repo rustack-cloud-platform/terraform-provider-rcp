@@ -21,6 +21,7 @@ func (args *Arguments) injectContextProjectById() {
 			Type:        schema.TypeString,
 			Description: "id of the Project",
 			Required:    true,
+			ForceNew:    true,
 		},
 	})
 }

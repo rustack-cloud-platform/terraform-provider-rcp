@@ -15,6 +15,16 @@ func (args *Arguments) injectContextVmByName() {
 	})
 }
 
+func (args *Arguments) injectContextVmById() {
+	args.merge(Arguments{
+		"vm_id": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "id of the Vm",
+		},
+	})
+}
+
 func (args *Arguments) injectCreateVm() {
 	systemDisk := Defaults()
 	systemDisk.injectSystemDisk()

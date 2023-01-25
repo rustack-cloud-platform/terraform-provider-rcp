@@ -57,7 +57,7 @@ resource "rustack_port" "router_port" {
 ### Optional
 
 - **firewall_templates** (List of String) list of firewall rule ids of the Port
-- **ip_address** (String) must be accurate
+- **ip_address** (String) ip address of port
 
 ### Read-Only
 

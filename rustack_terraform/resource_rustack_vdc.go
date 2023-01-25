@@ -14,6 +14,7 @@ import (
 func resourceRustackVdc() *schema.Resource {
 	args := Defaults()
 	args.injectCreateVdc()
+	args.injectContextHypervisorById()
 
 	return &schema.Resource{
 		CreateContext: resourceRustackVdcCreate,
@@ -40,7 +41,7 @@ func resourceRustackVdcCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	targetHypervisor, err := GetHypervisorById(d, manager, targetProject)
 	if err != nil {
-		return diag.Errorf("hypervisor_idЖ Error getting Hypervisor: %s", err)
+		return diag.Errorf("hypervisor_id: Error getting Hypervisor: %s", err)
 	}
 
 	vdc := rustack.NewVdc(d.Get("name").(string), targetHypervisor)
@@ -53,6 +54,7 @@ func resourceRustackVdcCreate(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("Error creating vdc: %s", err)
 	}
 
+	vdc.WaitLock()
 	d.SetId(vdc.ID)
 	log.Printf("[INFO] VDC created, ID: %s", d.Id())
 
@@ -69,7 +71,6 @@ func resourceRustackVdcRead(ctx context.Context, d *schema.ResourceData, meta in
 	flattenedProject := map[string]interface{}{
 		"name":          vdc.Name,
 		"project_id":    vdc.Project.ID,
-		"hypervisor_id": vdc.Hypervisor.ID,
 	}
 
 	if err := setResourceDataFromMap(d, flattenedProject); err != nil {
@@ -87,11 +88,15 @@ func resourceRustackVdcUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	if err != nil {
 		return diag.Errorf("id: Error getting vdc: %s", err)
 	}
-
+	if d.HasChange("hypervisor_id"){
+		return diag.Errorf("hypervisor_id: you can`t change hypervisor type on created vdc")
+	}
 	err = vdc.Rename(d.Get("name").(string))
 	if err != nil {
 		return diag.Errorf("name: Error rename vdc: %s", err)
 	}
+
+	vdc.WaitLock()
 
 	return resourceRustackVdcRead(ctx, d, meta)
 }
@@ -107,6 +112,7 @@ func resourceRustackVdcDelete(ctx context.Context, d *schema.ResourceData, meta 
 	if err != nil {
 		return diag.Errorf("Error deleting vdc: %s", err)
 	}
+	vdc.WaitLock()
 
 	return nil
 }

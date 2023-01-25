@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 
-	// "fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/pilat/rustack-go/rustack"
@@ -27,9 +26,6 @@ func resourceRustackNetwork() *schema.Resource {
 	}
 }
 
-const ru_port_error string = "Ваша сеть имеет хосты, которые могут рассматривать этот роутер как шлюз. Подключите их к другой, отдельной сети перед выполнением этого действия."
-const eng_port_error string = "do that because the network has a host or hosts threaded it as a gateway. Reconnect them to another network before doing that."
-const not_found_error string = "404"
 
 func resourceRustackNetworkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	manager := meta.(*CombinedConfig).rustackManager()
@@ -51,6 +47,7 @@ func resourceRustackNetworkCreate(ctx context.Context, d *schema.ResourceData, m
 	if diag != nil {
 		return diag
 	}
+	network.WaitLock()
 
 	log.Printf("[INFO] Network created, ID: %s", d.Id())
 
@@ -116,6 +113,7 @@ func resourceRustackNetworkUpdate(ctx context.Context, d *schema.ResourceData, m
 			return diagErr
 		}
 	}
+	network.WaitLock()
 
 	return resourceRustackNetworkRead(ctx, d, meta)
 }
@@ -131,6 +129,7 @@ func resourceRustackNetworkDelete(ctx context.Context, d *schema.ResourceData, m
 	if err = repeatOnError(network.Delete, network); err != nil {
 		return diag.Errorf("Error deleting network: %s", err)
 	}
+	network.WaitLock()
 
 	return nil
 }

@@ -14,6 +14,16 @@ func (args *Arguments) injectContextHypervisorByName() {
 	})
 }
 
+func (args *Arguments) injectContextHypervisorById() {
+	args.merge(Arguments{
+		"hypervisor_id": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "name of the Hypervisor",
+		},
+	})
+}
+
 func (args *Arguments) injectResultHypervisor() {
 	args.merge(Arguments{
 		"id": {

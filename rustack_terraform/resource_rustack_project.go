@@ -27,18 +27,29 @@ func resourceRustackProject() *schema.Resource {
 
 func resourceRustackProjectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	manager := meta.(*CombinedConfig).rustackManager()
-	allClients, err := manager.GetClients()
-	if err != nil {
-		return diag.Errorf("Error getting list of clients: %s", err)
-	}
-	if len(allClients) == 0 {
-		return diag.Errorf("There are no available clients")
-	}
-	if len(allClients) > 1 {
-		return diag.Errorf("More than one client available for you") // TODO: use provider's variable
-	}
+	client_id := manager.ClientID
+	var client *rustack.Client
+	var err error
+	
+	if client_id != "" {
+		client, err = manager.GetClient(client_id)
+		if err != nil {
+			return diag.Errorf("Error getting client: %s", err)
+		}
+	} else {
+		allClients, err := manager.GetClients()
+		if err != nil {
+			return diag.Errorf("Error there are no clients available for management: %s", err)
+		}
+		if len(allClients) == 0 {
+			return diag.Errorf("There are no available clients")
+		}
+		if len(allClients) > 1 {
+			return diag.Errorf("More than one client available for you") // TODO: use provider's variable
+		}
 
-	client := allClients[0]
+		client = allClients[0]
+	}
 
 	project := rustack.NewProject(
 		d.Get("name").(string),
@@ -49,6 +60,7 @@ func resourceRustackProjectCreate(ctx context.Context, d *schema.ResourceData, m
 	if err != nil {
 		return diag.Errorf("id: Error creating project: %s", err)
 	}
+	project.WaitLock()
 
 	d.SetId(project.ID)
 	log.Printf("[INFO] Project created, ID: %s", d.Id())
@@ -81,6 +93,7 @@ func resourceRustackProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 	if err != nil {
 		return diag.Errorf("name: Error rename project: %s", err)
 	}
+	project.WaitLock()
 
 	log.Printf("[INFO] Updated Project, ID: %#v", project)
 
@@ -101,6 +114,7 @@ func resourceRustackProjectDelete(ctx context.Context, d *schema.ResourceData, m
 	if err != nil {
 		return diag.Errorf("Error deleting project: %s", err)
 	}
+	project.WaitLock()
 
 	d.SetId("")
 	log.Printf("[INFO] Project deleted, ID: %s", projectId)

@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	var debugMode bool
+	var debugMode bool = true
 	flag.BoolVar(&debugMode, "debug", false, "set to true to run the provider with support for debuggers like delve")
 	flag.Parse()
 

@@ -93,6 +93,7 @@ func resourceRustackRouterUpdate(ctx context.Context, d *schema.ResourceData, me
 	if err != nil {
 		return diag.FromErr(err)
 	}
+	router.WaitLock()
 
 	return resourceRustackRouterRead(ctx, d, meta)
 }
@@ -149,6 +150,7 @@ func resourceRustackRouterDelete(ctx context.Context, d *schema.ResourceData, me
 	if err = repeatOnError(router.Delete, router); err != nil {
 		return diag.Errorf("Error deleting Router: %s", err)
 	}
+	router.WaitLock()
 
 	d.SetId("")
 	log.Printf("[INFO] Router deleted, ID: %s", routerId)
@@ -226,6 +228,7 @@ func createRouter(d *schema.ResourceData, manager *rustack.Manager) (diagErr dia
 	if err != nil {
 		return diag.Errorf("Error creating Router: %s", err)
 	}
+	router.WaitLock()
 
 	d.SetId(router.ID)
 	d.Set("floating", router.Floating)
