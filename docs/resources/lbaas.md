@@ -1,7 +1,7 @@
 ---
-page_title: "rustack_dns_record Resource - terraform-provider-rustack"
+page_title: "rustack_lbaas Resource - terraform-provider-rustack"
 ---
-# rustack_dns_record (Resource)
+# rustack_lbaas (Resource)
 
 Provides a Rustack DNS record resource.
 
@@ -55,4 +55,4 @@ Required:
 
 Optional:
 
-- **ip_address** (String) ip address for the lbaas
+- **ip_address** (String) ip address of port

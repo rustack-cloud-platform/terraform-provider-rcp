@@ -23,7 +23,7 @@ data "rustack_vdc" "single_vdc" {
     name = "Terraform VDC"
 }
 
-data "rustack_lbaas" "all_lbaass" {
+data "rustack_lbaass" "all_lbaass" {
     vdc_id = data.rustack_vdc.single_vdc.id
 }
 

@@ -3,7 +3,7 @@ page_title: "rustack_lbaas Data Source - terraform-provider-rustack"
 ---
 # rustack_lbaas (Data Source)
 
-Returns a list of Rustack lbaas.
+Get information about Rustack lbaas.
 
 Get information about lbaas in the Vdc for use in other resources.
 

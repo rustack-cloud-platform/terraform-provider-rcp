@@ -90,7 +90,7 @@ func (args *Arguments) injectResultListS3Storage() {
 	s.injectResultS3Storage()
 
 	args.merge(Arguments{
-		"s3storages": {
+		"s3_storages": {
 			Type:     schema.TypeList,
 			Computed: true,
 			Elem: &schema.Resource{

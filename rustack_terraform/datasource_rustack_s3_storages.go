@@ -27,13 +27,13 @@ func dataSourceRustackS3Read(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("Error getting project: %s", err)
 	}
 
-	s3Storages, err := project.GetS3Storages()
+	s3_storages, err := project.GetS3Storages()
 	if err != nil {
 		return diag.Errorf("Error retrieving storages: %s", err)
 	}
 
-	flattenedRecords := make([]map[string]interface{}, len(s3Storages))
-	for i, s3 := range s3Storages {
+	flattenedRecords := make([]map[string]interface{}, len(s3_storages))
+	for i, s3 := range s3_storages {
 		flattenedRecords[i] = map[string]interface{}{
 			"id":              s3.ID,
 			"name":            s3.Name,
@@ -44,15 +44,15 @@ func dataSourceRustackS3Read(ctx context.Context, d *schema.ResourceData, meta i
 
 	}
 
-	hash, err := hashstructure.Hash(s3Storages, hashstructure.FormatV2, nil)
+	hash, err := hashstructure.Hash(s3_storages, hashstructure.FormatV2, nil)
 	if err != nil {
-		diag.Errorf("unable to set `s3storages` attribute: %s", err)
+		diag.Errorf("unable to set `s3_storages` attribute: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("s3storages/%d", hash))
+	d.SetId(fmt.Sprintf("s3_storages/%d", hash))
 
-	if err := d.Set("s3storages", flattenedRecords); err != nil {
-		return diag.Errorf("unable to set `s3storages` attribute: %s", err)
+	if err := d.Set("s3_storages", flattenedRecords); err != nil {
+		return diag.Errorf("unable to set `s3_storages` attribute: %s", err)
 	}
 
 	return nil
