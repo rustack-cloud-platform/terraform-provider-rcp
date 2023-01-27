@@ -30,4 +30,4 @@ data "rustack_dns" "dns" {
 
 ### Read-Only
 
-- **id** (String) id of the VDC
+- **id** (String) id of the Dns

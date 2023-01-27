@@ -17,7 +17,6 @@ data "rustack_project" "single_project" {
 }
 
 data "rustack_dnss" "dns" {
-    name="dns.teraform."
     project_id = data.rustack_project.single_project.id
 }
 

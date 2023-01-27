@@ -3,7 +3,7 @@ page_title: "rustack_router Data Source - terraform-provider-rustack"
 ---
 # rustack_router (Data Source)
 
-Get information about a Router for use in other resources. 
+Get information about a Routers for use in other resources. 
 
 ## Example Usage
 
