@@ -47,10 +47,9 @@ func resourceRustackVmCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	vmName := d.Get("name").(string)
 	cpu := d.Get("cpu").(int)
-	ram := d.Get("ram").(int)
+	ram := d.Get("ram").(float64)
 	userData := d.Get("user_data").(string)
-	log.Printf("Vm details: name=%s, cpu: %d, ram: %d, user_data: %s, template name: %s",
-		vmName, cpu, ram, userData, template.Name)
+	log.Printf(vmName, cpu, ram, userData, template.Name)
 
 	// System disk creation
 	systemDiskArgs := d.Get("system_disk.0").(map[string]interface{})
@@ -189,7 +188,7 @@ func resourceRustackVmUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		needUpdate = true
 		hasFlavorChanged = true
 		vm.Cpu = d.Get("cpu").(int)
-		vm.Ram = d.Get("ram").(int)
+		vm.Ram = d.Get("ram").(float64)
 	}
 
 	needPowerOn := false
@@ -259,7 +258,7 @@ func resourceRustackVmDelete(ctx context.Context, d *schema.ResourceData, meta i
 			return diag.FromErr(err)
 		}
 	}
-
+	
 	portsIds := d.Get("ports").(*schema.Set).List()
 	for _, portId := range portsIds {
 		port, err := manager.GetPort(portId.(string))

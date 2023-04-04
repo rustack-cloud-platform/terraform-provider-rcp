@@ -40,7 +40,7 @@ func (args *Arguments) injectResultTemplate() {
 			Description: "minimum cpu required by the Template",
 		},
 		"min_ram": {
-			Type:        schema.TypeInt,
+			Type:        schema.TypeFloat,
 			Computed:    true,
 			Description: "minimum ram in GB required by the Template",
 		},

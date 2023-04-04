@@ -46,9 +46,8 @@ func (args *Arguments) injectCreateVm() {
 			Description:  "the number of virtual cpus",
 		},
 		"ram": {
-			Type:         schema.TypeInt,
+			Type:         schema.TypeFloat,
 			Required:     true,
-			ValidateFunc: validation.IntBetween(1, 256),
 			Description:  "memory of the Vm in gigabytes",
 		},
 		"template_id": {
@@ -125,7 +124,7 @@ func (args *Arguments) injectResultVm() {
 			Description: "the number of virtual cpus",
 		},
 		"ram": {
-			Type:        schema.TypeInt,
+			Type:        schema.TypeFloat,
 			Computed:    true,
 			Description: "memory of the Vm in gigabytes",
 		},
