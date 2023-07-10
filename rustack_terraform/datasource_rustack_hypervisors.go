@@ -11,8 +11,8 @@ import (
 
 func dataSourceRustackHypervisors() *schema.Resource {
 	args := Defaults()
-	args.injectContextProjectById()
 	args.injectResultListHypervisor()
+	args.injectContextProjectById()
 
 	return &schema.Resource{
 		ReadContext: dataSourceRustackHypervisorsRead,
@@ -35,10 +35,10 @@ func dataSourceRustackHypervisorsRead(ctx context.Context, d *schema.ResourceDat
 	flattenedHypervisors := make([]map[string]interface{}, len(hypervisors))
 	for i, hypervisor := range hypervisors {
 		flattenedHypervisors[i] = map[string]interface{}{
-			"id":         hypervisor.ID,
-			"name":       hypervisor.Name,
-			"type":       hypervisor.Type,
-			"project_id": targetProject.ID,
+			"id":   hypervisor.ID,
+			"name": hypervisor.Name,
+			"type": hypervisor.Type,
+			// "project_id": targetProject.ID,
 		}
 	}
 
@@ -48,7 +48,7 @@ func dataSourceRustackHypervisorsRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	d.SetId(fmt.Sprintf("hypervisors/%d", hash))
-	d.Set("project_id", nil)
+	// d.Set("project_id", nil)
 	// d.Set("project_name", nil)
 
 	if err := d.Set("hypervisors", flattenedHypervisors); err != nil {

@@ -16,6 +16,9 @@ data "rustack_project" "single_project" {
 
 data "rustack_dns" "dns" {
     name="dns.teraform."
+    # or
+    id = "id"
+    
     project_id = data.rustack_project.single_project.id
 }
 
@@ -26,8 +29,6 @@ data "rustack_dns" "dns" {
 ### Required
 
 - **project_id** (String) id of the Project
-- **name** (String) name of the dns zone
+- **name** (String) name of the dns zone `or` **id** (String) id of the dns zone
 
-### Read-Only
 
-- **id** (String) id of the Dns

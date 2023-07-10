@@ -12,12 +12,19 @@ func (args *Arguments) injectContextTemplateById() {
 	})
 }
 
-func (args *Arguments) injectContextTemplateByName() {
+func (args *Arguments) injectContextGetTemplate() {
 	args.merge(Arguments{
 		"name": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Optional:    true,
+			Computed:    true,
 			Description: "name of the Template",
+		},
+		"id": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			Description: "id of the Template",
 		},
 	})
 }

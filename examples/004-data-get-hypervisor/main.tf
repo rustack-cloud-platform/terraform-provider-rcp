@@ -19,4 +19,6 @@ data "rustack_project" "single_project" {
 data "rustack_hypervisor" "single_hypervisor" {
     project_id = data.rustack_project.single_project.id
     name = "VMWARE"
+    # or
+    id = "id"
 }

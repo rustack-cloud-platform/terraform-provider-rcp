@@ -39,6 +39,54 @@ func GetFirewallTemplateByName(d *schema.ResourceData, manager *rustack.Manager,
 	return nil, fmt.Errorf("ERROR: Firewall template with name '%s' not found", firewallTemplateName)
 }
 
+func GetKubernetesTemplateByName(d *schema.ResourceData, manager *rustack.Manager, vdc *rustack.Vdc) (*rustack.KubernetesTemplate, error) {
+	templateName := d.Get("name").(string)
+	templates, err := vdc.GetKubernetesTemplates()
+
+	if err != nil {
+		return nil, errors.Wrap(err, "Error getting list of kubernetes templates")
+	}
+
+	for _, template := range templates {
+		if strings.EqualFold(template.Name, templateName) {
+			return template, nil
+		}
+	}
+
+	return nil, fmt.Errorf("ERROR: Kubernetes template with name '%s' not found", templateName)
+
+}
+
+func GetKubernetesTemplateById(d *schema.ResourceData, manager *rustack.Manager, vdc *rustack.Vdc) (*rustack.KubernetesTemplate, error) {
+	templateId := d.Get("template_id").(string)
+	template, err := manager.GetKubernetesTemplate(templateId)
+
+	if err != nil {
+		return nil, errors.Wrap(err, "Error getting list of kubernetes templates")
+	}
+
+	return template, nil
+
+}
+
+func GetKubernetesByName(d *schema.ResourceData, manager *rustack.Manager, vdc *rustack.Vdc) (*rustack.Kubernetes, error) {
+	kubernetes_name := d.Get("name").(string)
+	kubernetes, err := vdc.GetKubernetes()
+
+	if err != nil {
+		return nil, errors.Wrap(err, "Error getting list of kubernetes templates")
+	}
+
+	for _, k8s := range kubernetes {
+		if strings.EqualFold(k8s.Name, kubernetes_name) {
+			return k8s, nil
+		}
+	}
+
+	return nil, fmt.Errorf("ERROR: Kubernetes template with name '%s' not found", kubernetes_name)
+
+}
+
 func GetTemplateByName(d *schema.ResourceData, manager *rustack.Manager, vdc *rustack.Vdc) (*rustack.Template, error) {
 	templateName := d.Get("name").(string)
 	templates, err := vdc.GetTemplates()
@@ -54,6 +102,41 @@ func GetTemplateByName(d *schema.ResourceData, manager *rustack.Manager, vdc *ru
 	}
 
 	return nil, fmt.Errorf("ERROR: Template with name '%s' not found", templateName)
+}
+
+func GetPlatformByName(d *schema.ResourceData, manager *rustack.Manager, vdc *rustack.Vdc) (*rustack.Platform, error) {
+	templateName := d.Get("name").(string)
+
+	platforms, err := manager.GetPlatforms(vdc.ID)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error getting list of platfroms")
+	}
+
+	for _, platform := range platforms {
+		if strings.EqualFold(platform.Name, templateName) {
+			return platform, nil
+		}
+	}
+
+	return nil, fmt.Errorf("ERROR: Template with name '%s' not found", templateName)
+}
+
+func GetPubKeyByName(d *schema.ResourceData, manager *rustack.Manager) (*rustack.PubKey, error) {
+	key_name := d.Get("name").(string)
+	account := d.Get("account_id").(string)
+	pub_keys, err := manager.GetPublicKeys(account)
+
+	if err != nil {
+		return nil, errors.Wrap(err, "Error getting list of public keys")
+	}
+
+	for _, pub_key := range pub_keys {
+		if strings.EqualFold(pub_key.Name, key_name) {
+			return pub_key, nil
+		}
+	}
+
+	return nil, fmt.Errorf("ERROR: Public key with name '%s' not found", key_name)
 
 }
 
@@ -209,6 +292,52 @@ func GetHypervisorById(d *schema.ResourceData, manager *rustack.Manager, project
 	var targetHypervisor *rustack.Hypervisor
 
 	hypervisorId := d.Get("hypervisor_id")
+	for _, hypervisor := range hypervisors {
+		if hypervisor.ID == hypervisorId.(string) {
+			targetHypervisor = hypervisor
+			break
+		}
+	}
+
+	if targetHypervisor == nil {
+		return nil, fmt.Errorf("ERROR: Hypervisor with id '%s' not found", hypervisorId)
+	}
+
+	return targetHypervisor, nil
+}
+
+func GetHypervisorByIdRead(d *schema.ResourceData, manager *rustack.Manager, project *rustack.Project) (*rustack.Hypervisor, error) {
+	hypervisors, err := project.GetAvailableHypervisors()
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error getting list of hypervisors")
+	}
+
+	var targetHypervisor *rustack.Hypervisor
+
+	hypervisorId := d.Get("id")
+	for _, hypervisor := range hypervisors {
+		if hypervisor.ID == hypervisorId.(string) {
+			targetHypervisor = hypervisor
+			break
+		}
+	}
+
+	if targetHypervisor == nil {
+		return nil, fmt.Errorf("ERROR: Hypervisor with id '%s' not found", hypervisorId)
+	}
+
+	return targetHypervisor, nil
+}
+
+func GetHypervisorByIdK8s(d *schema.ResourceData, manager *rustack.Manager, project *rustack.Project) (*rustack.Hypervisor, error) {
+	hypervisors, err := project.GetAvailableHypervisors()
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error getting list of hypervisors")
+	}
+
+	var targetHypervisor *rustack.Hypervisor
+
+	hypervisorId := d.Get("platform")
 	for _, hypervisor := range hypervisors {
 		if hypervisor.ID == hypervisorId.(string) {
 			targetHypervisor = hypervisor
@@ -499,4 +628,16 @@ func GetS3ById(d *schema.ResourceData, manager *rustack.Manager) (*rustack.S3Sto
 
 	return nil, fmt.Errorf("ERROR: Dns with id '%s' not found", s3_id)
 
+}
+
+func checkDatasourceNameOrId(d *schema.ResourceData) (search string, err error) {
+	id := d.Get("id").(string)
+	name := d.Get("name").(string)
+	if name == "" && id == "" {
+		return "",fmt.Errorf("Must be specified 'name' or 'id'")
+	}
+	if id != "" {
+		return "id", nil
+	}
+	return "name", nil
 }

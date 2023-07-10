@@ -46,12 +46,19 @@ func (args *Arguments) injectContextVdcByIdForData() {
 	})
 }
 
-func (args *Arguments) injectContextVdcByName() {
+func (args *Arguments) injectContextGetVdc() {
 	args.merge(Arguments{
 		"name": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Optional:    true,
+			Computed:    true,
 			Description: "name of the vdc",
+		},
+		"id": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			Description: "id of the VDC",
 		},
 	})
 }

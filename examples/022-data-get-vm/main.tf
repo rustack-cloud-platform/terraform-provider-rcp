@@ -24,4 +24,6 @@ data "rustack_vdc" "single_vdc" {
 data "rustack_vm" "single_vm" {
   vdc_id = data.rustack_vdc.single_vdc.id
   name   = "Сервер 1"
+  # or
+  id = "id"
 }

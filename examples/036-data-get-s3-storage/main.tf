@@ -19,4 +19,6 @@ data "rustack_project" "single_project" {
 data "rustack_s3_storage" "s3_storage" {
     project_id = data.rustack_project.single_project.id
     name = "storage"
+    # or
+    id = "id"
 }

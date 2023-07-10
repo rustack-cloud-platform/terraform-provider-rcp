@@ -14,6 +14,7 @@ data "rustack_project" "single_project" {
 resource "rustack_s3_storage" "s3_storage" {
     project_id = resource.rustack_project.single_project.id
     name = "s3_storage"
+    backend = "minio" # or "netapp"
 }
 ```
 
@@ -23,6 +24,7 @@ resource "rustack_s3_storage" "s3_storage" {
 
 - **name** (String) name of the s3_storage
 - **project_id** (String) id of the project
+- **backend** (String) backend of the s3_storage (`minio` or `netapp`)
 
 ### Optional
 

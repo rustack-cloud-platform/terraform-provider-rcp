@@ -5,13 +5,14 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/pilat/rustack-go/rustack"
 )
 
 func dataSourceRustackHypervisor() *schema.Resource {
 	args := Defaults()
 	args.injectResultHypervisor()
 	args.injectContextProjectById()
-	args.injectContextHypervisorByName()
+	args.injectContextGetHypervisor()
 
 	return &schema.Resource{
 		ReadContext: dataSourceRustackHypervisorRead,
@@ -26,9 +27,21 @@ func dataSourceRustackHypervisorRead(ctx context.Context, d *schema.ResourceData
 		return diag.Errorf("Error getting project: %s", err)
 	}
 
-	targetHypervisor, err := GetHypervisorByName(d, manager, targetProject)
+	target, err := checkDatasourceNameOrId(d)
 	if err != nil {
 		return diag.Errorf("Error getting hypervisor: %s", err)
+	}
+	var targetHypervisor *rustack.Hypervisor
+	if target == "id" {
+		targetHypervisor, err = GetHypervisorByIdRead(d, manager, targetProject)
+		if err != nil {
+			return diag.Errorf("Error getting hypervisor: %s", err)
+		}
+	} else {
+		targetHypervisor, err = GetHypervisorByName(d, manager, targetProject)
+		if err != nil {
+			return diag.Errorf("Error getting hypervisor: %s", err)
+		}
 	}
 
 	flatten := map[string]interface{}{

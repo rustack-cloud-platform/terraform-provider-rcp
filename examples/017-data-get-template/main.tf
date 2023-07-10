@@ -24,4 +24,6 @@ data "rustack_vdc" "single_vdc" {
 data "rustack_template" "single_template" {
   vdc_id = data.rustack_vdc.single_vdc.id
   name   = "Debian 10"
+  # or
+  id = "id"
 }

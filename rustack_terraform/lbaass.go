@@ -5,12 +5,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func (args *Arguments) injectContextLbaasByName() {
+func (args *Arguments) injectContextGetLbaas() {
 	args.merge(Arguments{
 		"name": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Optional:    true,
+			Computed:    true,
 			Description: "name of the Lbaas",
+		},
+		"id": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			Description: "id of the Lbaas",
 		},
 	})
 }

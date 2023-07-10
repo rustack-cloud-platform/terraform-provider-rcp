@@ -24,4 +24,6 @@ data "rustack_vdc" "single_vdc" {
 data "rustack_disk" "single_disk" {
   vdc_id = data.rustack_vdc.single_vdc.id
   name   = "Disk 2"
+  # or
+  id = "id"
 }

@@ -5,13 +5,14 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/pilat/rustack-go/rustack"
 )
 
 func dataSourceRustackDns() *schema.Resource {
 	args := Defaults()
 	args.injectContextProjectById()
 	args.injectResultDns()
-	args.injectContextDnsByName() // override name
+	args.injectContextGetDns() // override name
 
 	return &schema.Resource{
 		ReadContext: dataSourceRustackDnsRead,
@@ -22,14 +23,26 @@ func dataSourceRustackDns() *schema.Resource {
 func dataSourceRustackDnsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	manager := meta.(*CombinedConfig).rustackManager()
 
-	targetDns, err := GetDnsByName(d, manager)
+	target, err := checkDatasourceNameOrId(d)
 	if err != nil {
 		return diag.Errorf("Error getting dns: %s", err)
 	}
+	var targetDns *rustack.Dns
+	if target == "id" {
+		targetDns, err = manager.GetDns(d.Get("id").(string))
+		if err != nil {
+			return diag.Errorf("Error getting dns: %s", err)
+		}
+	} else {
+		targetDns, err = GetDnsByName(d, manager)
+		if err != nil {
+			return diag.Errorf("Error getting dns: %s", err)
+		}
+	}
 
 	flatten := map[string]interface{}{
-		"id":      targetDns.ID,
-		"name":    targetDns.Name,
+		"id":         targetDns.ID,
+		"name":       targetDns.Name,
 		"project_id": targetDns.Project.ID,
 	}
 

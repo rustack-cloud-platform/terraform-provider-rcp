@@ -14,4 +14,6 @@ provider "rustack" {
 
 data "rustack_project" "single_project" {
     name = "Terraform Project"
+    # or
+    id = "id"
 }

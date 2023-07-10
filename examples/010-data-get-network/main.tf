@@ -24,4 +24,6 @@ data "rustack_vdc" "single_vdc" {
 data "rustack_network" "single_network" {
   vdc_id = data.rustack_vdc.single_vdc.id
   name   = "Network 1"
+  # or
+  id = "id"
 }

@@ -20,7 +20,10 @@ data "rustack_vdc" "single_vdc" {
 
 data "rustack_storage_profile" "single_storage_profile" {
     vdc_id = data.rustack_vdc.single_vdc.id
+
     name = "ssd"
+    # or
+    id = "id"
 }
 
 ```
@@ -28,9 +31,5 @@ data "rustack_storage_profile" "single_storage_profile" {
 
 ### Required
 
-- **name** (String) Name of the storage profile
+- **name** (String) Name of the storage profile `or` **id** (String) id of the storage profile
 - **vdc_id** (String) id of the VDC
-
-### Read-Only
-
-- **id** (String) The identifier for the storage profile

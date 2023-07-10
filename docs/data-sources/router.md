@@ -20,7 +20,10 @@ data "rustack_vdc" "single_vdc" {
 
 data "rustack_router" "single_Router" {
     vdc_id = data.rustack_vdc.single_vdc.id
+    
     name = "Terraform Router"
+    # or
+    id = "id"
 }
 
 ```
@@ -29,8 +32,5 @@ data "rustack_router" "single_Router" {
 ### Required
 
 - **vdc_id** (String) id of the VDC
-- **name** (String) name of the Router
+- **name** (String) name of the Router `or` **id** (String) id of the Router
 
-### Read-Only
-
-- **id** (String) id of the Router

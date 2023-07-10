@@ -5,13 +5,14 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/pilat/rustack-go/rustack"
 )
 
 func dataSourceRustackNetwork() *schema.Resource {
 	args := Defaults()
 	args.injectResultNetwork()
 	args.injectContextVdcByIdForData()
-	args.injectContextNetworkByName() // override "name"
+	args.injectContextGetNetwork() // override "name"
 
 	return &schema.Resource{
 		ReadContext: dataSourceRustackNetworkRead,
@@ -26,9 +27,22 @@ func dataSourceRustackNetworkRead(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("Error getting vdc: %s", err)
 	}
 
-	targetNetwork, err := GetNetworkByName(d, manager, targetVdc)
+	target, err := checkDatasourceNameOrId(d)
 	if err != nil {
 		return diag.Errorf("Error getting network: %s", err)
+	}
+	var targetNetwork *rustack.Network
+	if target == "id" {
+		targetNetwork, err = manager.GetNetwork(d.Get("id").(string))
+		if err != nil {
+			return diag.Errorf("Error getting network: %s", err)
+		}
+	} else {
+		targetNetwork, err = GetNetworkByName(d, manager, targetVdc)
+		if err != nil {
+			return diag.Errorf("Error getting network: %s", err)
+
+		}
 	}
 
 	allSubnets, err := targetNetwork.GetSubnets()
@@ -55,7 +69,7 @@ func dataSourceRustackNetworkRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	flatten := map[string]interface{}{
-		"id": targetNetwork.ID,
+		"id":      targetNetwork.ID,
 		"subnets": flatten2,
 	}
 

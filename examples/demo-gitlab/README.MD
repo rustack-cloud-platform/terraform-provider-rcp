@@ -1,7 +1,7 @@
 # Example
 
 Place your token to `terraform.tfvars` file.
-Also make sure that your publick key mentioned here.
+Also make sure that your public key mentioned here.
 
 ```
 terraform init

@@ -25,7 +25,10 @@ data "rustack_vdc" "single_vdc" {
 
 data "rustack_lbaas" "test" {
     vdc_id = data.rustack_vdc.single_vdc.id
+    
     name = "test"
+    # or
+    id = "id"
 }
 
 ```
@@ -35,7 +38,7 @@ data "rustack_lbaas" "test" {
 ### Required
 
 - **vdc_id** (String) id of the VDC
-- **name** (String) name of the LoadBalancer
+- **name** (String) name of the LoadBalancer `or` **id** (String) id of the LoadBalancer
 
 ### Read-Only
 

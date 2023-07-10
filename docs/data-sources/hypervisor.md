@@ -15,7 +15,10 @@ data "rustack_project" "single_project" {
 
 data "rustack_hypervisor" "single_hypervisor" {
     project_id = data.rustack_project.single_project.id
+    
     name = "VMWARE"
+    # or
+    id ="id"
 }
 
 ```
@@ -24,10 +27,9 @@ data "rustack_hypervisor" "single_hypervisor" {
 
 ### Required
 
-- **name** (String) name of the Hypervisor
+- **name** (String) name of the Hypervisor `or` **id** (String) id of the Hypervisor
 - **project_id** (String) id of the Project
 
 ### Read-Only
 
-- **id** (String) id of the Hypervisor
 - **type** (String) type of the Hypervisor

@@ -20,7 +20,10 @@ data "rustack_vdc" "single_vdc" {
 
 data "rustack_disk" "single_disk" {
     vdc_id = data.rustack_vdc.single_vdc.id
+    
     name = "Disk 2"
+    # or
+    id = "id"
 }
 
 ```
@@ -28,12 +31,11 @@ data "rustack_disk" "single_disk" {
 
 ### Required
 
-- **name** (String) name of the disk
+- **name** (String) name of the disk `or` **id** (String) id of the disk
 - **vdc_id** (String) id of the VDC
 
 ### Read-Only
 
-- **id** (String) id of the Disk
 - **size** (Number) the size of the Disk in gigabytes
 - **storage_profile_id** (String) the id of the StorageProfile
 - **storage_profile_name** (String) the name of the StorageProfile
