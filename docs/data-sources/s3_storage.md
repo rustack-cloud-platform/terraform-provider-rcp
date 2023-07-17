@@ -15,7 +15,10 @@ data "rustack_project" "single_project" {
 
 data "rustack_s3_storage" "s3_storage" {
     project_id = resource.rustack_project.single_project.id
+    
     name = "s3_storage"
+    # or
+    id = "id"
 }
 
 ```
@@ -25,11 +28,11 @@ data "rustack_s3_storage" "s3_storage" {
 ### Required
 
 - **project_id** (String) id of the project
-- **name** (String) name of the S3Storage
+- **name** (String) name of the S3Storage `or` **id** (String) id of the S3Storage
 
 ### Read-Only
 
-- **id** (String) id of the S3Storage
+- **backend** (String) backend for access to s3
 - **client_endpoint** (String) url for connecting to s3"
 - **access_key** (String) access_key for access to s3
 - **secret_key** (String) secret_key for access to s3

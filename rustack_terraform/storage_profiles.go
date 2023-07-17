@@ -4,12 +4,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func (args *Arguments) injectContextStorageProfileByName() {
+func (args *Arguments) injectContextGetStorageProfile() {
 	args.merge(Arguments{
 		"name": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Optional:    true,
+			Computed:    true,
 			Description: "Name of the storage profile",
+		},
+		"id": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			Description: "id of the storage profile",
 		},
 	})
 }

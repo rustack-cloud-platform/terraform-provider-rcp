@@ -21,6 +21,8 @@ data "rustack_vdc" "single_vdc" {
 data "rustack_network" "single_network" {
     vdc_id = data.rustack_vdc.single_vdc.id
     name = "Сеть 1"
+    # or
+    id = "id"
 }
 
 ```
@@ -28,12 +30,12 @@ data "rustack_network" "single_network" {
 
 ### Required
 
-- **name** (String) name of the Network
+- **name** (String) name of the Network `or` **id** (String) id of the Network
 - **vdc_id** (String) id of the VDC
 
 ### Read-Only
 
-- **id** (String) id of the Network
+
 - **subnets** (List of Object) list of subnets (see [below for nested schema](#nestedatt--subnets))
 
 <a id="nestedatt--subnets"></a>

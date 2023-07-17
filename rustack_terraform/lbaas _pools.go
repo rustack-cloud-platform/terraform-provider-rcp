@@ -5,12 +5,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func (args *Arguments) injectContextLbaasPoolByName() {
+func (args *Arguments) injectContextGetLbaasPool() {
 	args.merge(Arguments{
 		"name": {
 			Type:        schema.TypeString,
-			Required:    true,
-			Description: "name of the Lbaas",
+			Optional:    true,
+			Computed:    true,
+			Description: "name of the Lbaas Pool",
+		},
+		"id": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			Description: "id of the Lbaas Pool",
 		},
 	})
 }
@@ -18,19 +25,18 @@ func (args *Arguments) injectContextLbaasPoolByName() {
 func (args *Arguments) injectCreateLbaasPool() {
 	poolMembers := Defaults()
 	poolMembers.injectLbaasPoolMembers()
-	
 
 	args.merge(Arguments{
 		"connlimit": {
 			Type:        schema.TypeInt,
 			Optional:    true,
-			Default: "65536",
+			Default:     "65536",
 			Description: "id of the Template",
 		},
 		"cookie_name": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Default: "",
+			Type:        schema.TypeString,
+			Optional:    true,
+			Default:     "",
 			Description: "name of the Lbaas",
 		},
 		"method": {

@@ -60,6 +60,8 @@ resource "rustack_lbaas_pool" "pool" {
         weight = 1
         vm_id = data.rustack_vm.vm.id
     }
+    
+    depends_on = [rustack_vm.vm]
 }
 
 ```

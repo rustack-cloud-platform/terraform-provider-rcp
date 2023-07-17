@@ -19,8 +19,12 @@ data "rustack_project" "single_project" {
 data "rustack_vdc" "single_vdc" {
     project_id = data.rustack_project.single_project.id
     name = "Terraform VDC"
+    # or
+    id = "id"
 }
 
 data "rustack_vdc" "single_vdc2" {
     name = "Terraform VDC"
+    # or
+    id = "id"
 }

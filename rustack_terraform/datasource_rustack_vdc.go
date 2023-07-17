@@ -12,7 +12,7 @@ func dataSourceRustackVdc() *schema.Resource {
 	args := Defaults()
 	args.injectResultVdc()
 	args.injectContextProjectByIdOptional()
-	args.injectContextVdcByName() // override name
+	args.injectContextGetVdc() // override name
 
 	return &schema.Resource{
 		ReadContext: dataSourceRustackVdcRead,
@@ -33,10 +33,22 @@ func dataSourceRustackVdcRead(ctx context.Context, d *schema.ResourceData, meta 
 
 		targetProject = project
 	}
-
-	targetVdc, err := GetVdcByName(d, manager, targetProject)
+	
+	target, err := checkDatasourceNameOrId(d)
 	if err != nil {
 		return diag.Errorf("Error getting VDC: %s", err)
+	}
+	var targetVdc *rustack.Vdc
+	if target == "id" {
+		targetVdc, err = manager.GetVdc(d.Get("id").(string))
+		if err != nil {
+			return diag.Errorf("Error getting VDC: %s", err)
+		}
+	} else {
+		targetVdc, err = GetVdcByName(d, manager, targetProject)
+		if err != nil {
+			return diag.Errorf("Error getting VDC: %s", err)
+		}
 	}
 
 	flattenedVdc := map[string]interface{}{

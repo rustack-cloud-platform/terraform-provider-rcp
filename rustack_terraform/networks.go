@@ -16,12 +16,19 @@ func (args *Arguments) injectContextNetworkById() {
 	})
 }
 
-func (args *Arguments) injectContextNetworkByName() {
+func (args *Arguments) injectContextGetNetwork() {
 	args.merge(Arguments{
 		"name": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Optional:    true,
+			Computed:    true,
 			Description: "name of the Network",
+		},
+		"id": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			Description: "id of the Network",
 		},
 	})
 }
@@ -90,9 +97,6 @@ func (args *Arguments) injectCreateNetwork() {
 						Type:        schema.TypeBool,
 						Required:    true,
 						Description: "enable dhcp service of the Subnet",
-						ValidateFunc: validation.All(
-							validation.NoZeroValues,
-						),
 					},
 					"dns": {
 						Type:        schema.TypeList,

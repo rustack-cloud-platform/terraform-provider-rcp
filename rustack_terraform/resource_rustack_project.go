@@ -45,7 +45,7 @@ func resourceRustackProjectCreate(ctx context.Context, d *schema.ResourceData, m
 			return diag.Errorf("There are no available clients")
 		}
 		if len(allClients) > 1 {
-			return diag.Errorf("More than one client available for you") // TODO: use provider's variable
+			return diag.Errorf("More than one client available for you")
 		}
 
 		client = allClients[0]

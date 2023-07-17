@@ -19,5 +19,7 @@ data "rustack_project" "single_project" {
 
 data "rustack_dns" "dns" {
     name="test.test."
+    # or
+    id = "id"
     project_id = resource.rustack_project.single_project.id
 }

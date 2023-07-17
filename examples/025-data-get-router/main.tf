@@ -24,4 +24,6 @@ data "rustack_vdc" "single_vdc" {
 data "rustack_router" "router1" {
   vdc_id = data.rustack_vdc.single_vdc.id
   name = "Router 1"
+  # or
+  id = "id"
 }

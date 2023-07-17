@@ -24,7 +24,10 @@ data "rustack_vdc" "single_vdc" {
 
 data "rustack_vm" "single_vm" {
     vdc_id = data.rustack_vdc.single_vdc.id
+    
     name = "Server 1"
+    # or
+    id = "id"
 }
 
 ```
@@ -33,7 +36,7 @@ data "rustack_vm" "single_vm" {
 
 ### Required
 
-- **name** (String) name of the Vm
+- **name** (String) name of the Vm `or` **id** (String) id of the Vm
 - **vdc_id** (String) id of the VDC
 
 ### Read-Only
@@ -41,8 +44,7 @@ data "rustack_vm" "single_vm" {
 - **cpu** (Number) the number of virtual cpus
 - **floating** (Boolean) enable floating ip for the Vm
 - **floating_ip** (String) floating_ip of the Vm. May be omitted
-- **id** (String) id of the Vm
-- **ram** (Number) memory of the Vm in gigabytes
+- **ram** (Float) memory of the Vm in gigabytes
 - **template_id** (String) id of the Template
 - **template_name** (String) name of the Template
 - **system_disk_id** (String) System disk id

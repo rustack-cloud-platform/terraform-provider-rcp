@@ -11,6 +11,8 @@ Get information about a Project for use in other resources.
 
 data "rustack_project" "single_project" {
     name = "Terraform Project"
+    # or
+    id = "id"
 }
 
 ```

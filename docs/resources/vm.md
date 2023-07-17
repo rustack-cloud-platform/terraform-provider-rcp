@@ -96,7 +96,7 @@ resource "rustack_vm" "vm1" {
 - **system_disk** System disk (Min: 1, Max: 1). 
 - **name** (String) name of the Vm
 - **ports** (List of String) list of Ports id attached to the Vm. 
-- **ram** (Number) memory of the Vm in gigabytes
+- **ram** (Float) memory of the Vm in gigabytes
 - **template_id** (String) id of the Template
 - **user_data** (String) script for cloud-init
 - **vdc_id** (String) id of the VDC

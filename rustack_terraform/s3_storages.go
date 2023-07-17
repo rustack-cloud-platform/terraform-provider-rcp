@@ -5,12 +5,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func (args *Arguments) injectContextS3StorageByName() {
+func (args *Arguments) injectContextGetS3Storage() {
 	args.merge(Arguments{
 		"name": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Optional:    true,
+			Computed:    true,
 			Description: "name of the S3Storage",
+		},
+		"id": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			Description: "id of the S3Storage",
 		},
 	})
 }
@@ -36,6 +43,12 @@ func (args *Arguments) injectCreateS3Storage() {
 				validation.StringLenBetween(1, 255),
 			),
 			Description: "name of the S3Storage",
+		},
+		"backend": {
+			Type:        schema.TypeString,
+			Required:    true,
+			ForceNew:    true,
+			Description: "backend for s3",
 		},
 		"client_endpoint": {
 			Type:        schema.TypeString,
@@ -66,6 +79,11 @@ func (args *Arguments) injectResultS3Storage() {
 			Type:        schema.TypeString,
 			Computed:    true,
 			Description: "name of the S3Storage",
+		},
+		"backend": {
+			Type:        schema.TypeString,
+			Computed:    true,
+			Description: "backend for s3",
 		},
 		"client_endpoint": {
 			Type:        schema.TypeString,

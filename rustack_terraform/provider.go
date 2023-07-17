@@ -19,7 +19,7 @@ func Provider() *schema.Provider {
 			"api_endpoint": {
 				Type:        schema.TypeString,
 				Required:    true,
-				DefaultFunc: schema.EnvDefaultFunc("RUSTACK_API_URL", "https://cp.sbcloud.ru"),
+				DefaultFunc: schema.EnvDefaultFunc("RUSTACK_API_URL", "https://cp.iteco.cloud"),
 				Description: "The URL to use for the Rustack API.",
 			},
 			"client_id": {
@@ -32,35 +32,42 @@ func Provider() *schema.Provider {
 		DataSourcesMap: map[string]*schema.Resource{
 			"rustack_account": dataSourceRustackAccount(),
 
-			"rustack_project":            dataSourceRustackProject(),           // 002-data-get-project +
-			"rustack_projects":           dataSourceRustackProjects(),          // 003-data-get-projects +
-			"rustack_hypervisor":         dataSourceRustackHypervisor(),        // 004-data-get-hypervisor +
-			"rustack_hypervisors":        dataSourceRustackHypervisors(),       // 005-data-get-hypervisors +
-			"rustack_vdc":                dataSourceRustackVdc(),               // 007-data-get-vdc +
-			"rustack_vdcs":               dataSourceRustackVdcs(),              // 008-data-get-vdcs +
-			"rustack_network":            dataSourceRustackNetwork(),           // 010-data-get-network +
-			"rustack_networks":           dataSourceRustackNetworks(),          // 011-data-get-networks +
-			"rustack_storage_profile":    dataSourceRustackStorageProfile(),    // 012-data-get-storage-profile +
-			"rustack_storage_profiles":   dataSourceRustackStorageProfiles(),   // 013-data-get-storage-profiles +
-			"rustack_disk":               dataSourceRustackDisk(),              // 015-data-get-disk +
-			"rustack_disks":              dataSourceRustackDisks(),             // 016-data-get-disks +
-			"rustack_template":           dataSourceRustackTemplate(),          // 017-data-get-template +
-			"rustack_templates":          dataSourceRustackTemplates(),         // 018-data-get-templates +
-			"rustack_firewall_template":  dataSourceRustackFirewallTemplate(),  // 019-data-get-template +
-			"rustack_firewall_templates": dataSourceRustackFirewallTemplates(), // 020-data-get-templates +
-			"rustack_vm":                 dataSourceRustackVm(),                // 022-data-get-vm
-			"rustack_vms":                dataSourceRustackVms(),               // 023-data-get-vms
-			"rustack_router":             dataSourceRustackRouter(),            // 025-data-get-router +
-			"rustack_routers":            dataSourceRustackRouters(),           // 026-data-get-routers +
-			"rustack_port":               dataSourceRustackPort(),              // 027-data-get-port +
-			"rustack_ports":              dataSourceRustackPorts(),             // 027-data-get-ports +
-			"rustack_dns":                dataSourceRustackDns(),               // 028-data-get-dns +
-			"rustack_dnss":               dataSourceRustackDnss(),              // 028-data-get-dnss +
-			"rustack_lbaas":              dataSourceRustackLbaas(),             // 028-data-get-lbaas +
-			"rustack_lbaass":             dataSourceRustackLoadBalancers(),     // 028-data-get-lbaass +
-			"rustack_s3":                 dataSourceRustackLoadBalancers(),     // 028-data-get-lbaass +
-			"rustack_s3_storage":         dataSourceRustackS3Storage(),     	// 028-data-get-s3-storage +
-			"rustack_s3_storages":        dataSourceRustackS3Storages(),     	// 028-data-get-s3-storages +
+			"rustack_project":              dataSourceRustackProject(),             // 002-data-get-project +
+			"rustack_projects":             dataSourceRustackProjects(),            // 003-data-get-projects +
+			"rustack_hypervisor":           dataSourceRustackHypervisor(),          // 004-data-get-hypervisor +
+			"rustack_hypervisors":          dataSourceRustackHypervisors(),         // 005-data-get-hypervisors +
+			"rustack_vdc":                  dataSourceRustackVdc(),                 // 007-data-get-vdc +
+			"rustack_vdcs":                 dataSourceRustackVdcs(),                // 008-data-get-vdcs +
+			"rustack_network":              dataSourceRustackNetwork(),             // 010-data-get-network +
+			"rustack_networks":             dataSourceRustackNetworks(),            // 011-data-get-networks +
+			"rustack_storage_profile":      dataSourceRustackStorageProfile(),      // 012-data-get-storage-profile +
+			"rustack_storage_profiles":     dataSourceRustackStorageProfiles(),     // 013-data-get-storage-profiles +
+			"rustack_disk":                 dataSourceRustackDisk(),                // 015-data-get-disk +
+			"rustack_disks":                dataSourceRustackDisks(),               // 016-data-get-disks +
+			"rustack_template":             dataSourceRustackTemplate(),            // 017-data-get-template +
+			"rustack_templates":            dataSourceRustackTemplates(),           // 018-data-get-templates +
+			"rustack_firewall_template":    dataSourceRustackFirewallTemplate(),    // 019-data-get-template +
+			"rustack_firewall_templates":   dataSourceRustackFirewallTemplates(),   // 020-data-get-templates +
+			"rustack_vm":                   dataSourceRustackVm(),                  // 022-data-get-vm
+			"rustack_vms":                  dataSourceRustackVms(),                 // 023-data-get-vms
+			"rustack_router":               dataSourceRustackRouter(),              // 025-data-get-router +
+			"rustack_routers":              dataSourceRustackRouters(),             // 026-data-get-routers +
+			"rustack_port":                 dataSourceRustackPort(),                // 027-data-get-port +
+			"rustack_ports":                dataSourceRustackPorts(),               // 027-data-get-ports +
+			"rustack_dns":                  dataSourceRustackDns(),                 // 028-data-get-dns +
+			"rustack_dnss":                 dataSourceRustackDnss(),                // 028-data-get-dnss +
+			"rustack_lbaas":                dataSourceRustackLbaas(),               // 028-data-get-lbaas +
+			"rustack_lbaass":               dataSourceRustackLoadBalancers(),       // 028-data-get-lbaass +
+			"rustack_s3":                   dataSourceRustackLoadBalancers(),       // 028-data-get-lbaass +
+			"rustack_s3_storage":           dataSourceRustackS3Storage(),           // 028-data-get-s3-storage +
+			"rustack_s3_storages":          dataSourceRustackS3Storages(),          // 028-data-get-s3-storages +
+			"rustack_kubernetes":           dataSourceRustackKubernetes(),          // 030-resource-get-kubernetes +
+			"rustack_kubernetess":          dataSourceRustackKubernetess(),         // 030-resource-get-kubernetess +
+			"rustack_kubernetes_template":  dataSourceRustackKubernetesTemplate(),  // 030-resource-get-kubernetes_template +
+			"rustack_kubernetes_templates": dataSourceRustackKubernetesTemplates(), // 030-resource-get-kubernetes_templates +
+			"rustack_pub_key":              dataSourceRustackPublicKey(),           // 030-resource-get-pub-key +
+			"rustack_platform":             dataSourceRustackPlatform(),            // 030-resource-get-platform +
+			"rustack_platforms":            dataSourceRustackPlatforms(),           // 030-resource-get-platforms +
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
@@ -79,6 +86,7 @@ func Provider() *schema.Provider {
 			"rustack_lbaas_pool":             resourceRustackLbaasPool(),        // 029-resource-create-lbaas-pool +
 			"rustack_s3_storage":             resourceRustackS3Storage(),        // 029-resource-create-s3-storage +
 			"rustack_s3_storage_bucket":      resourceRustackS3StorageBucket(),  // 029-resource-create-s3-storage-bucket +
+			"rustack_kubernetes":             resourceRustackKubernetes(),       // 030-resource-create-rustack-kubernetes +
 		},
 	}
 

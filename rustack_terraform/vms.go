@@ -5,12 +5,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func (args *Arguments) injectContextVmByName() {
+func (args *Arguments) injectContextGetVm() {
 	args.merge(Arguments{
 		"name": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Optional:    true,
+			Computed:    true,
 			Description: "name of the Vm",
+		},
+		"id": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			Description: "id of the vm",
 		},
 	})
 }
@@ -46,9 +53,9 @@ func (args *Arguments) injectCreateVm() {
 			Description:  "the number of virtual cpus",
 		},
 		"ram": {
-			Type:         schema.TypeFloat,
-			Required:     true,
-			Description:  "memory of the Vm in gigabytes",
+			Type:        schema.TypeFloat,
+			Required:    true,
+			Description: "memory of the Vm in gigabytes",
 		},
 		"template_id": {
 			Type:        schema.TypeString,

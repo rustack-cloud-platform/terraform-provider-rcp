@@ -38,7 +38,8 @@ func resourceRustackS3StorageCreate(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("project_id: Error getting Project: %s", err)
 	}
 	name := d.Get("name").(string)
-	newS3Storage := rustack.NewS3Storage(name)
+	backend := d.Get("backend").(string)
+	newS3Storage := rustack.NewS3Storage(name, backend)
 
 	err = project.CreateS3Storage(&newS3Storage)
 	if err != nil {
@@ -79,6 +80,7 @@ func resourceRustackS3StorageRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(S3Storage.ID)
 	d.Set("name", S3Storage.Name)
+	d.Set("backend", S3Storage.Backend)
 	d.Set("project", S3Storage.Project.ID)
 	d.Set("client_endpoint", S3Storage.ClientEndpoint)
 	d.Set("secret_key", S3Storage.SecretKey)

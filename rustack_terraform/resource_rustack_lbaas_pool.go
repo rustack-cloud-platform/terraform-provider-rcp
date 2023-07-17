@@ -60,7 +60,7 @@ func resourceRustackLbaasPoolCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	newPool := rustack.NewLoadBalancerPool(
-		lbaas,
+		*lbaas,
 		d.Get("port").(int),
 		d.Get("connlimit").(int),
 		members,

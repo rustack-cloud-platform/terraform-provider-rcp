@@ -5,12 +5,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func (args *Arguments) injectContextProjectName() {
+func (args *Arguments) injectContextGetProject() {
 	args.merge(Arguments{
 		"name": {
 			Type:        schema.TypeString,
 			Description: "name of the Project",
-			Required:    true,
+			Optional:    true,
+			Computed:    true,
+		},
+		"id": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Computed:    true,
+			Description: "id of the Project",
 		},
 	})
 }

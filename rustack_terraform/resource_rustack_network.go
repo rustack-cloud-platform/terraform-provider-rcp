@@ -164,7 +164,6 @@ func createSubnet(d *schema.ResourceData, manager *rustack.Manager) (diagErr dia
 			return diag.Errorf("dns: Error Update DNS Servers: %s", err)
 		}
 
-		// TODO: Add Subnet Routes
 	}
 
 	return

@@ -5,13 +5,14 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/pilat/rustack-go/rustack"
 )
 
 func dataSourceRustackFirewallTemplate() *schema.Resource {
 	args := Defaults()
 	args.injectResultFirewallTemplate()
 	args.injectContextVdcById()
-	args.injectContextFirewallTemplateByName() // override name
+	args.injectContextGetFirewallTemplate() // override name
 
 	return &schema.Resource{
 		ReadContext: dataSourceRustackFirewallTemplateRead,
@@ -26,11 +27,22 @@ func dataSourceRustackFirewallTemplateRead(ctx context.Context, d *schema.Resour
 		return diag.Errorf("Error getting vdc: %s", err)
 	}
 
-	targetFirewallTemplate, err := GetFirewallTemplateByName(d, manager, targetVdc)
+	target, err := checkDatasourceNameOrId(d)
 	if err != nil {
 		return diag.Errorf("Error getting template: %s", err)
 	}
-
+	var targetFirewallTemplate *rustack.FirewallTemplate
+	if target == "id" {
+		targetFirewallTemplate, err = manager.GetFirewallTemplate(d.Get("id").(string))
+		if err != nil {
+			return diag.Errorf("Error getting template: %s", err)
+		}
+	} else {
+		targetFirewallTemplate, err = GetFirewallTemplateByName(d, manager, targetVdc)
+		if err != nil {
+			return diag.Errorf("Error getting template: %s", err)
+		}
+	}
 
 	flatten := map[string]interface{}{
 		"id":   targetFirewallTemplate.ID,

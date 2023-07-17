@@ -25,7 +25,7 @@ variable "rustack_token" {}
 
 # Configure the Rustack Provider
 provider "rustack" {
-    api_endpoint = "https://cp.sbcloud.ru"
+    api_endpoint = "https://cp.iteco.cloud"
     token = var.rustack_token
 }
 

@@ -37,6 +37,7 @@ func dataSourceRustackS3Read(ctx context.Context, d *schema.ResourceData, meta i
 		flattenedRecords[i] = map[string]interface{}{
 			"id":              s3.ID,
 			"name":            s3.Name,
+			"backend":         s3.Backend,
 			"client_endpoint": s3.ClientEndpoint,
 			"access_key":      s3.AccessKey,
 			"secret_key":      s3.SecretKey,

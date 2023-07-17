@@ -5,13 +5,14 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/pilat/rustack-go/rustack"
 )
 
 func dataSourceRustackVm() *schema.Resource {
 	args := Defaults()
 	args.injectResultVm()
 	args.injectContextVdcById()
-	args.injectContextVmByName() // override "name"
+	args.injectContextGetVm() // override "name"
 
 	return &schema.Resource{
 		ReadContext: dataSourceRustackVmRead,
@@ -25,10 +26,21 @@ func dataSourceRustackVmRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err != nil {
 		return diag.Errorf("Error getting vdc: %s", err)
 	}
-
-	targetVm, err := GetVmByName(d, manager, targetVdc)
+	target, err := checkDatasourceNameOrId(d)
 	if err != nil {
 		return diag.Errorf("Error getting vm: %s", err)
+	}
+	var targetVm *rustack.Vm
+	if target == "id" {
+		targetVm, err = manager.GetVm(d.Get("id").(string))
+		if err != nil {
+			return diag.Errorf("Error getting vm: %s", err)
+		}
+	} else {
+		targetVm, err = GetVmByName(d, manager, targetVdc)
+		if err != nil {
+			return diag.Errorf("Error getting vm: %s", err)
+		}
 	}
 
 	flatten := map[string]interface{}{

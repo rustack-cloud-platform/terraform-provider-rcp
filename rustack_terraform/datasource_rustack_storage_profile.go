@@ -5,13 +5,14 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/pilat/rustack-go/rustack"
 )
 
 func dataSourceRustackStorageProfile() *schema.Resource {
 	args := Defaults()
 	args.injectResultStorageProfile()
 	args.injectContextVdcById()
-	args.injectContextStorageProfileByName() // override name
+	args.injectContextGetStorageProfile() // override name
 
 	return &schema.Resource{
 		ReadContext: dataSourceRustackStorageProfileRead,
@@ -26,9 +27,21 @@ func dataSourceRustackStorageProfileRead(ctx context.Context, d *schema.Resource
 		return diag.Errorf("Error getting vdc: %s", err)
 	}
 
-	targetStorageProfile, err := GetStorageProfileByName(d, manager, targetVdc)
+	target, err := checkDatasourceNameOrId(d)
 	if err != nil {
 		return diag.Errorf("Error getting storage profile: %s", err)
+	}
+	var targetStorageProfile *rustack.StorageProfile
+	if target == "id" {
+		targetStorageProfile, err = targetVdc.GetStorageProfile(d.Get("id").(string))
+		if err != nil {
+			return diag.Errorf("Error getting storage profile: %s", err)
+		}
+	} else {
+		targetStorageProfile, err = GetStorageProfileByName(d, manager, targetVdc)
+		if err != nil {
+			return diag.Errorf("Error getting storage profile: %s", err)
+		}
 	}
 
 	flatten := map[string]interface{}{

@@ -20,7 +20,10 @@ data "rustack_vdc" "single_vdc" {
 
 data "rustack_template" "single_template" {
     vdc_id = data.rustack_vdc.single_vdc.id
+    
     name = "Debian 10"
+    # or
+    id = "id"
 }
 
 ```
@@ -29,12 +32,11 @@ data "rustack_template" "single_template" {
 
 ### Required
 
-- **name** (String) name of the Template
+- **name** (String) name of the Template `or` **id** (String) id of the Template
 - **vdc_id** (String) id of the VDC
 
 ### Read-Only
 
-- **id** (String) id of the Template
 - **min_cpu** (Number) minimum cpu required by the Template
 - **min_disk** (Number) minimum disk size in GB required by the Template
-- **min_ram** (Number) minimum ram in GB required by the Template
+- **min_ram** (Float) minimum ram in GB required by the Template

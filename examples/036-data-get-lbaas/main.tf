@@ -24,4 +24,6 @@ data "rustack_vdc" "single_vdc" {
 data "rustack_lbaas" "lbaas" {
     vdc_id = resource.rustack_vdc.single_vdc.id
     name = "lbaas"
+    # or
+    id = "id"
 }

@@ -5,12 +5,13 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/pilat/rustack-go/rustack"
 )
 
 func dataSourceRustackProject() *schema.Resource {
 	args := Defaults()
 	args.injectResultProject()
-	args.injectContextProjectName()
+	args.injectContextGetProject()
 
 	return &schema.Resource{
 		ReadContext: dataSourceRustackProjectRead,
@@ -20,9 +21,22 @@ func dataSourceRustackProject() *schema.Resource {
 
 func dataSourceRustackProjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	manager := meta.(*CombinedConfig).rustackManager()
-	targetProject, err := GetProjectByName(d, manager)
+
+	target, err := checkDatasourceNameOrId(d)
 	if err != nil {
 		return diag.Errorf("Error getting project: %s", err)
+	}
+	var targetProject *rustack.Project
+	if target == "id" {
+		targetProject, err = manager.GetProject(d.Get("id").(string))
+		if err != nil {
+			return diag.Errorf("Error getting project: %s", err)
+		}
+	} else {
+		targetProject, err = GetProjectByName(d, manager)
+		if err != nil {
+			return diag.Errorf("Error getting project: %s", err)
+		}
 	}
 
 	flattenedProject := map[string]interface{}{

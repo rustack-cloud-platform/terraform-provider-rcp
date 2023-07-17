@@ -21,6 +21,8 @@ data "rustack_vdc" "single_vdc" {
 
 data "rustack_vdc" "single_vdc2" {
     name = "Terraform VDC"
+    # or
+    id = "id"
 }
 
 ```
@@ -29,7 +31,7 @@ data "rustack_vdc" "single_vdc2" {
 
 ### Required
 
-- **name** (String) name of the vdc
+- **name** (String) name of the vdc `or` **id** (String) id of the vdc
 
 ### Optional
 
@@ -39,4 +41,3 @@ data "rustack_vdc" "single_vdc2" {
 
 - **hypervisor** (String) name of the Hypervisor
 - **hypervisor_type** (String) type of the Hypervisor
-- **id** (String) id of the VDC
