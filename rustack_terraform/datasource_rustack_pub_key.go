@@ -43,6 +43,8 @@ func dataSourceRustackPublicKeyRead(ctx context.Context, d *schema.ResourceData,
 	flatten := map[string]interface{}{
 		"id":   targetPublicKey.ID,
 		"name": targetPublicKey.Name,
+		"public_key": targetPublicKey.Fingerprint,
+		"fingerprint": targetPublicKey.PublicKey,
 	}
 
 	if err := setResourceDataFromMap(d, flatten); err != nil {

@@ -60,7 +60,7 @@ data "rustack_kubernetes" "single_k8s" {
 - **This block will print dashboard_url in console**
 ```
     output "dashboard_url" {
-        value = resource.rustack_kubernetes.dashboard_url
+        value = data.rustack_kubernetes.single_k8s.dashboard_url
     }
 ```
 ### Get kubectl config

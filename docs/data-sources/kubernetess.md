@@ -5,7 +5,7 @@ page_title: "rustack_kubernetess Data Source - terraform-provider-rustack"
 
 Returns a list of Rustack kubernetess.
 
-Get information about Vms in the Vdc for use in other resources.
+Get information about all kubernetes clasters in the Vdc for use in other resources.
 
 Note: You can use the [`rustack_vm`](Kubernetess) data source to obtain metadata
 about a single Kubernetess if you already know the `name` and `vdc_id` to retrieve.
@@ -23,7 +23,7 @@ data "rustack_vdc" "single_vdc" {
     name = "Terraform VDC"
 }
 
-data "rustack_kubernetess" "all_vms" {
+data "rustack_kubernetess" "all_k8s" {
     vdc_id = data.rustack_vdc.single_vdc.id
 }
 
@@ -65,7 +65,7 @@ Read-Only:
 - *This block will print dashboard_url in console*
 ```
     output "dashboard_url" {
-        value = resource.rustack_kubernetes[0].dashboard_url
+        value = data.rustack_kubernetes.all_k8s[0].dashboard_url
     }
 ```
 

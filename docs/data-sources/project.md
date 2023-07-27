@@ -20,8 +20,4 @@ data "rustack_project" "single_project" {
 
 ### Required
 
-- **name** (String) name of the Project
-
-### Read-Only
-
-- **id** (String) id of the Project
+- **name** (String) name of the Project `or` **id** (String) id of the Project

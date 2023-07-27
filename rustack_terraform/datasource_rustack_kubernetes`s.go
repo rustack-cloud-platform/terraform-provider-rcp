@@ -45,6 +45,11 @@ func dataSourceRustackKubernetessRead(ctx context.Context, d *schema.ResourceDat
 			return diag.Errorf("id: Error creating Kubernetes config file url: %s", err)
 		}
 
+		err = targetKubernetes.GetKubernetesConfigUrl()
+		if err != nil {
+			return diag.Errorf("id: Error creating Kubernetes config file url: %s", err)
+		}
+
 		vms := make([]*string, len(targetKubernetes.Vms))
 		for i, vm := range targetKubernetes.Vms {
 			vms[i] = &vm.ID

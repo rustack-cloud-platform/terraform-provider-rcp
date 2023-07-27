@@ -5,7 +5,7 @@ page_title: "rustack_s3_storages Data Source - terraform-provider-rustack"
 
 Returns a list of Rustack S3Storage.
 
-Get information about S3Storage in the Vdc for use in other resources.
+Get information about S3Storage in the project for use in other resources.
 
 Note: You can use the [`rustack_s3_storage`](S3Storage) data source to obtain metadata
 about a single s3 storage if you already know the `name` and `project_id` to retrieve.
@@ -29,7 +29,7 @@ data "rustack_s3_storages" "s3_storages" {
 
 ### Required
 
-- **project_id** (String) id of the VDC
+- **project_id** (String) id of the project
 
 ### Read-Only
 
