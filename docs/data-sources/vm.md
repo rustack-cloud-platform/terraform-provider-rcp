@@ -48,8 +48,13 @@ data "rustack_vm" "single_vm" {
 - **template_id** (String) id of the Template
 - **template_name** (String) name of the Template
 - **system_disk_id** (String) System disk id
-- **disks** (List) Additional disks
-**id** (String)
-**size** (Number) the size of the Disk in gigabytes
-**vdc_id** (String) id of the VDC
-**storage_profile_id** (String) the id of the StorageProfile
+
+- **disks** (List of Object) list of additional disks (see [below for nested schema](#nestedatt--disks))
+
+<a id="nestedatt--disks"></a>
+### Nested Schema for `disks`
+
+- **id** (String)
+- **size** (Number) the size of the Disk in gigabytes
+- **vdc_id** (String) id of the VDC
+- **storage_profile_id** (String) the id of the StorageProfile

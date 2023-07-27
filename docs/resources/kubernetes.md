@@ -34,7 +34,7 @@ data "rustack_account" "me"{}
 
 data "rustack_kubernetes_template" "kubernetes_template"{
     name = "Kubernetes 1.22.1"
-    vdc_id = resource.rustack_vdc.single_vdc.id
+    vdc_id = data.rustack_vdc.single_vdc.id
     
 }
 
@@ -44,13 +44,13 @@ data "rustack_pub_key" "key"{
 }
 
 data "rustack_platform" "pl"{
-    vdc_id = resource.rustack_vdc.single_vdc.id
+    vdc_id = data.rustack_vdc.single_vdc.id
     name = "Intel Cascade Lake"
     
 }
 
 resource "rustack_kubernetes" "k8s" {
-    vdc_id = resource.rustack_vdc.single_vdc.id
+    vdc_id = data.rustack_vdc.single_vdc.id
     name = "test"
     node_ram = 3
     node_cpu = 3
@@ -74,19 +74,19 @@ output "dashboard_url" {
 ### Required
 
 - **vdc_id** (String) id of the VDC
-- **name** (String) name of the Vm
-- **node_cpu** (Number) the number of virtual cpus
-- **node_ram** (Number) memory of the Vm in gigabytes
+- **name** (String) name of the Kubernetes
+- **node_cpu** (Integer) the number virtual cpus of the Vm
+- **node_ram** (Integer) memory of the Vm in gigabytes
 - **template_id** (String) id of the Template
-- **platform** (String) id of the Template
-- **nodes_count** (Number) id of the Template
-- **node_disk_size** (Number) script for cloud-init
-- **node_storage_profile_id** (String) script for cloud-init
-- **user_public_key_id** (String) script for cloud-init
+- **platform** (String) id of the Template `(this field only for vmware hypervisor)`
+- **nodes_count** (Integer) id of the Template
+- **node_disk_size** (Integer) Size of disk in Kubernetes node
+- **node_storage_profile_id** (String) Storage profile of disk in Kubernetes node
+- **user_public_key_id** (String) key for communicating between Kubernetes nodes
 
 ### Optional
 
-- **floating** (Boolean) enable floating ip for the Vm
+- **floating** (Boolean) enable floating ip for the Kubernetes
 - **id** (String) The ID of this resource.
 - **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 

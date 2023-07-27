@@ -50,5 +50,4 @@ data "rustack_lbaas" "test" {
 Read-Only:
 
 - **floating** (Boolean)
-- **id** (String)
 - **name** (String)

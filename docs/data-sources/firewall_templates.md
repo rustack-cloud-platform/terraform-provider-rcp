@@ -21,7 +21,7 @@ data "rustack_vdc" "single_vdc" {
     name = "Terraform VDC"
 }
 
-data "rustack_firewall_templates" "single_template" {
+data "rustack_firewall_templates" "all_templates" {
     vdc_id = data.rustack_vdc.single_vdc.id
 }
 

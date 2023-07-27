@@ -32,7 +32,7 @@ data "rustack_s3_storage" "s3_storage" {
 
 ### Read-Only
 
-- **backend** (String) backend for access to s3
+- **backend** (String) backend for access to s3 (`minio` or `netapp`)
 - **client_endpoint** (String) url for connecting to s3"
 - **access_key** (String) access_key for access to s3
 - **secret_key** (String) secret_key for access to s3
