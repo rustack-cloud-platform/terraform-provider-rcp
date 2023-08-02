@@ -46,8 +46,8 @@ Read-Only:
 
 - **id** (String)
 - **name** (String)
-- **node_cpu** (Number)
-- **node_ram** (Number)
+- **node_cpu** (Integer)
+- **node_ram** (Integer)
 - **template_id** (String)
 - **floating** (Boolean)
 - **floating_ip** (String)

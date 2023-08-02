@@ -37,6 +37,6 @@ data "rustack_template" "single_template" {
 
 ### Read-Only
 
-- **min_cpu** (Number) minimum cpu required by the Template
-- **min_disk** (Number) minimum disk size in GB required by the Template
+- **min_cpu** (Integer) minimum cpu required by the Template
+- **min_disk** (Integer) minimum disk size in GB required by the Template
 - **min_ram** (Float) minimum ram in GB required by the Template

@@ -44,7 +44,7 @@ data "rustack_kubernetes_templates" "k8s_template" {
 Read-Only:
 
 - **id** (String)
-- **min_node_cpu** (Number)
-- **min_node_hdd** (Number)
-- **min_node_ram** (Number)
+- **min_node_cpu** (Integer)
+- **min_node_hdd** (Integer)
+- **min_node_ram** (Integer)
 - **name** (String)

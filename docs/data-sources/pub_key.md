@@ -30,5 +30,5 @@ data "rustack_pub_key" "key" {
 
 ### Read-Only
 
-- **fingerprint** (Number) fingerprint of public key
-- **public_key** (Number) public_key value of public key data source
+- **fingerprint** (Integer) fingerprint of public key
+- **public_key** (Integer) public_key value of public key data source

@@ -87,21 +87,13 @@ output "dashboard_url" {
 ### Optional
 
 - **floating** (Boolean) enable floating ip for the Kubernetes
-- **id** (String) The ID of this resource.
 - **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 
 ### Read-Only
 
 - **floating_ip** (String) floating ip for the Vm. May be omitted
-
-Optional:
-
-- **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
-
-Read-Only:
-
-- **id** (String) id of the Disk
+- **id** (String) The ID of this resource.
 
 ## Getting information about kubernetes
 

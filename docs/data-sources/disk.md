@@ -36,7 +36,7 @@ data "rustack_disk" "single_disk" {
 
 ### Read-Only
 
-- **size** (Number) the size of the Disk in gigabytes
+- **size** (Integer) the size of the Disk in gigabytes
 - **storage_profile_id** (String) the id of the StorageProfile
 - **storage_profile_name** (String) the name of the StorageProfile
 

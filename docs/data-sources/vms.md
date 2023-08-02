@@ -44,11 +44,12 @@ data "rustack_vms" "all_vms" {
 
 Read-Only:
 
-- **cpu** (Number)
+- **cpu** (Integer)
 - **floating** (Boolean)
 - **floating_ip** (String)
 - **id** (String)
 - **name** (String)
-- **ram** (Number)
+- **ram** (Integer)
 - **template_id** (String)
 - **template_name** (String)
+- **power** (Boolean)
