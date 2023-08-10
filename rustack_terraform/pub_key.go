@@ -42,12 +42,12 @@ func (args *Arguments) injectResultPublicKey() {
 			Description: "name of the Public Key",
 		},
 		"fingerprint": {
-			Type:        schema.TypeFloat,
+			Type:        schema.TypeString,
 			Computed:    true,
 			Description: "fingerprint of the  Public Key",
 		},
 		"public_key": {
-			Type:        schema.TypeFloat,
+			Type:        schema.TypeString,
 			Computed:    true,
 			Description: "public_key of the Public Key instance",
 		},

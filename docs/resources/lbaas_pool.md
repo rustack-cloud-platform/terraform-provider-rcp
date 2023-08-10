@@ -1,9 +1,9 @@
 ---
-page_title: "rustack_dns_record Resource - terraform-provider-rustack"
+page_title: "rustack_lbaas_pool Resource - terraform-provider-rustack"
 ---
-# rustack_dns_record (Resource)
+# rustack_lbaas_pool (Resource)
 
-Provides a Rustack DNS record resource.
+Provides a Rustack Lbaas pool resource.
 
 ## Example Usage
 

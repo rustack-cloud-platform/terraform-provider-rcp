@@ -41,7 +41,7 @@ data "rustack_kubernetes" "single_k8s" {
 
 ### Read-Only
 
-- **node_cpu** (Number) the number of virtual cpus
+- **node_cpu** (Integer) the number of virtual cpus
 - **floating** (Boolean) enable floating ip for the Kubernetes
 - **floating_ip** (String) floating_ip of the Kubernetes. May be omitted
 - **nodes_count** (String) vms count of the Kubernetes
@@ -49,10 +49,9 @@ data "rustack_kubernetes" "single_k8s" {
 - **user_public_key_id** (String) public key of the Kubernetes
 - **node_storage_profile_id** (String) storage profile id of the attached vms in Kubernetes
 - **dashboard_url** (String) dashboard url of the Kubernetes
-- **node_ram** (Number) the number of ram of the attached vms in Kubernetes
+- **node_ram** (Integer) the number of ram of the attached vms in Kubernetes
 - **template_id** (String) id of the Template
 - **vms** (List) List of vms attached to Kubernetes
-**id** (String)
 
 ## Getting information about kubernetes
 

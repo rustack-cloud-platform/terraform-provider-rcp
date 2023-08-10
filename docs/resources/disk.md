@@ -37,7 +37,7 @@ resource "rustack_disk" "disk2" {
 ### Required
 
 - **name** (String) name of the Disk
-- **size** (Number) the size of the Disk in gigabytes
+- **size** (Integer) the size of the Disk in gigabytes
 - **storage_profile_id** (String) Id of the storage profile
 - **vdc_id** (String) id of the VDC
 

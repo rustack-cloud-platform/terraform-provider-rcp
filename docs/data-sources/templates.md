@@ -44,7 +44,7 @@ data "rustack_templates" "single_template" {
 Read-Only:
 
 - **id** (String)
-- **min_cpu** (Number)
-- **min_disk** (Number)
-- **min_ram** (Number)
+- **min_cpu** (Integer)
+- **min_disk** (Integer)
+- **min_ram** (Integer)
 - **name** (String)

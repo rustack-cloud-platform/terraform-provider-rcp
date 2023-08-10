@@ -37,7 +37,7 @@ data "rustack_kubernetes_template" "k8s_template" {
 
 ### Read-Only
 
-- **min_node_cpu** (Number) minimum cpu required by the kubernetes template
-- **min_node_hdd** (Number) minimum disk size in GB required by the kubernetes template
-- **min_node_ram** (Number) minimum ram in GB required by the kubernetes template
+- **min_node_cpu** (Integer) minimum cpu required by the kubernetes template
+- **min_node_hdd** (Integer) minimum disk size in GB required by the kubernetes template
+- **min_node_ram** (Integer) minimum ram in GB required by the kubernetes template
 

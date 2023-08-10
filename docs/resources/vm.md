@@ -76,8 +76,8 @@ resource "rustack_vm" "vm1" {
     }
     
     disks = [
-        data.rustack_disk.new_disk1,
-        data.rustack_disk.new_disk2,
+        data.rustack_disk.new_disk1.id,
+        data.rustack_disk.new_disk2.id,
     ]
 
     ports {
@@ -92,8 +92,8 @@ resource "rustack_vm" "vm1" {
 
 ### Required
 
-- **cpu** (Number) the number of virtual cpus
-- **system_disk** System disk (Min: 1, Max: 1). 
+- **cpu** (Integer) the number of virtual cpus
+- **system_disk** System disk (Min: 1, Max: 1).   (see [below for nested schema](#nestedblock--system_disk))
 - **name** (String) name of the Vm
 - **ports** (List of String) list of Ports id attached to the Vm. 
 - **ram** (Float) memory of the Vm in gigabytes
@@ -104,24 +104,23 @@ resource "rustack_vm" "vm1" {
 ### Optional
 
 - **floating** (Boolean) enable floating ip for the Vm
-- **id** (String) The ID of this resource.
 - **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 - **disks** (Toset, String) list of Disks id attached to the Vm.
+- **power** (Boolean) the vm state
 
 
 ### Read-Only
 
 - **floating_ip** (String) floating ip for the Vm. May be omitted
+- **id** (String) The ID of this resource.
 
-<a id="nestedblock--disk"></a>
-### Nested Schema for `disk`
+<a id="nestedblock--system_disk"></a>
+### Nested Schema for `system_disk`
 
 Required:
 
-- **name** (String) name of the Disk
-- **size** (Number) the size of the Disk in gigabytes
+- **size** (Integer) the size of the Disk in gigabytes
 - **storage_profile_id** (String) Id of the storage profile
-- **vdc_id** (String) id of the VDC
 
 Optional:
 
@@ -130,3 +129,4 @@ Optional:
 Read-Only:
 
 - **id** (String) id of the Disk
+- **name** (String) name of the Disk

@@ -44,6 +44,6 @@ Read-Only:
 
 - **id** (String)
 - **name** (String)
-- **size** (Number)
+- **size** (Integer)
 - **storage_profile_id** (String)
 - **storage_profile_name** (String)
