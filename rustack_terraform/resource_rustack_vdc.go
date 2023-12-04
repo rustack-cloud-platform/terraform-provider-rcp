@@ -65,12 +65,17 @@ func resourceRustackVdcRead(ctx context.Context, d *schema.ResourceData, meta in
 	manager := meta.(*CombinedConfig).rustackManager()
 	vdc, err := manager.GetVdc(d.Id())
 	if err != nil {
-		return diag.Errorf("id: Error getting vdc: %s", err)
+		if err.(*rustack.RustackApiError).Code() == 404 {
+			d.SetId("")
+			return nil
+		} else {
+			return diag.Errorf("id: Error getting vdc: %s", err)
+		}
 	}
 
 	flattenedProject := map[string]interface{}{
-		"name":          vdc.Name,
-		"project_id":    vdc.Project.ID,
+		"name":       vdc.Name,
+		"project_id": vdc.Project.ID,
 	}
 
 	if err := setResourceDataFromMap(d, flattenedProject); err != nil {
@@ -88,7 +93,7 @@ func resourceRustackVdcUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	if err != nil {
 		return diag.Errorf("id: Error getting vdc: %s", err)
 	}
-	if d.HasChange("hypervisor_id"){
+	if d.HasChange("hypervisor_id") {
 		return diag.Errorf("hypervisor_id: you can`t change hypervisor type on created vdc")
 	}
 	err = vdc.Rename(d.Get("name").(string))

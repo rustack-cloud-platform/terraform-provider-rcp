@@ -26,7 +26,6 @@ func resourceRustackNetwork() *schema.Resource {
 	}
 }
 
-
 func resourceRustackNetworkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	manager := meta.(*CombinedConfig).rustackManager()
 	targetVdc, err := GetVdcById(d, manager)
@@ -58,7 +57,12 @@ func resourceRustackNetworkRead(ctx context.Context, d *schema.ResourceData, met
 	manager := meta.(*CombinedConfig).rustackManager()
 	network, err := manager.GetNetwork(d.Id())
 	if err != nil {
-		return diag.Errorf("id: Error getting network: %s", err)
+		if err.(*rustack.RustackApiError).Code() == 404 {
+			d.SetId("")
+			return nil
+		} else {
+			return diag.Errorf("id: Error getting network: %s", err)
+		}
 	}
 
 	d.Set("name", network.Name)

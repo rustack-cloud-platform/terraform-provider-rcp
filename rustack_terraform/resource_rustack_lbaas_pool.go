@@ -89,7 +89,12 @@ func resourceRustackLbaasPoolRead(ctx context.Context, d *schema.ResourceData, m
 
 	pool, err := lbaas.GetLoadBalancerPool(lbaasPoolId)
 	if err != nil {
-		return diag.Errorf("Error getting LbaasPool: %s", err)
+		if err.(*rustack.RustackApiError).Code() == 404 {
+			d.SetId("")
+			return nil
+		} else {
+			return diag.Errorf("Error getting LbaasPool: %s", err)
+		}
 	}
 
 	d.SetId(pool.ID)

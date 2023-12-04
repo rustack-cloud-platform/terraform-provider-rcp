@@ -75,7 +75,12 @@ func resourceRustackS3StorageRead(ctx context.Context, d *schema.ResourceData, m
 	manager := meta.(*CombinedConfig).rustackManager()
 	S3Storage, err := manager.GetS3Storage(d.Id())
 	if err != nil {
-		return diag.Errorf("id: Error getting S3Storage: %s", err)
+		if err.(*rustack.RustackApiError).Code() == 404 {
+			d.SetId("")
+			return nil
+		} else {
+			return diag.Errorf("id: Error getting S3Storage: %s", err)
+		}
 	}
 
 	d.SetId(S3Storage.ID)

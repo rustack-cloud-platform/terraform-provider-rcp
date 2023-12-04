@@ -97,8 +97,12 @@ func resourceRustackKubernetesRead(ctx context.Context, d *schema.ResourceData, 
 	manager := meta.(*CombinedConfig).rustackManager()
 	Kubernetes, err := manager.GetKubernetes(d.Id())
 	if err != nil {
-		diagErr = diag.Errorf("id: Error getting Kubernetes: %s", err)
-		return
+		if err.(*rustack.RustackApiError).Code() == 404 {
+			d.SetId("")
+			return nil
+		} else {
+			return diag.Errorf("id: Error getting Kubernetes: %s", err)
+		}
 	}
 
 	d.SetId(Kubernetes.ID)

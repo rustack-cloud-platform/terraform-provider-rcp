@@ -179,28 +179,17 @@ func GetDiskById(d *schema.ResourceData, manager *rustack.Manager) (*rustack.Dis
 	return disk, nil
 }
 
-func GetStorageProfileById(d *schema.ResourceData, manager *rustack.Manager, vdc *rustack.Vdc, prefix *string) (*rustack.StorageProfile, error) {
+func GetStorageProfileById(storageProfileId string, manager *rustack.Manager, vdc *rustack.Vdc) (*rustack.StorageProfile, error) {
 	storageProfiles, err := vdc.GetStorageProfiles()
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error getting list of storage profiles")
 	}
-
-	var targetStorageProfile *rustack.StorageProfile
-
-	storageProfileId := d.Get(MakePrefix(prefix, "storage_profile_id")).(string)
 	for _, storageProfile := range storageProfiles {
 		if storageProfile.ID == storageProfileId {
-			targetStorageProfile = storageProfile
-			break
+			return storageProfile, nil
 		}
 	}
-
-	if targetStorageProfile == nil {
-		return nil, fmt.Errorf("ERROR. Storage profile with id '%s' not found", storageProfileId)
-	}
-
-	return targetStorageProfile, nil
-
+	return nil, fmt.Errorf("ERROR. Storage profile with id '%s' not found", storageProfileId)
 }
 
 func GetNetworkById(d *schema.ResourceData, manager *rustack.Manager, prefix *string) (*rustack.Network, error) {
@@ -634,7 +623,7 @@ func checkDatasourceNameOrId(d *schema.ResourceData) (search string, err error) 
 	id := d.Get("id").(string)
 	name := d.Get("name").(string)
 	if name == "" && id == "" {
-		return "",fmt.Errorf("Must be specified 'name' or 'id'")
+		return "", fmt.Errorf("Must be specified 'name' or 'id'")
 	}
 	if id != "" {
 		return "id", nil

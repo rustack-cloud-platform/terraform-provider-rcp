@@ -48,8 +48,12 @@ func resourceRustackRouterRead(ctx context.Context, d *schema.ResourceData, meta
 	manager := meta.(*CombinedConfig).rustackManager()
 	router, err := manager.GetRouter(d.Id())
 	if err != nil {
-		diagErr = diag.Errorf("id: Error getting Router: %s", err)
-		return
+		if err.(*rustack.RustackApiError).Code() == 404 {
+			d.SetId("")
+			return nil
+		} else {
+			return diag.Errorf("id: Error getting Router: %s", err)
+		}
 	}
 
 	d.SetId(router.ID)

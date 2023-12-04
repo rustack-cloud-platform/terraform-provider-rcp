@@ -55,7 +55,12 @@ func resourceRustackFirewallTemplateRead(ctx context.Context, d *schema.Resource
 	manager := meta.(*CombinedConfig).rustackManager()
 	firewallTemplate, err := manager.GetFirewallTemplate(d.Id())
 	if err != nil {
-		return diag.Errorf("id: Error getting Firewall Template: %s", err)
+		if err.(*rustack.RustackApiError).Code() == 404 {
+			d.SetId("")
+			return nil
+		} else {
+			return diag.Errorf("id: Error getting Firewall Template: %s", err)
+		}
 	}
 
 	d.SetId(firewallTemplate.ID)
@@ -80,7 +85,6 @@ func resourceRustackFirewallTemplateUpdate(ctx context.Context, d *schema.Resour
 
 	return resourceRustackFirewallTemplateRead(ctx, d, meta)
 }
-
 
 func resourceRustackFirewallTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	manager := meta.(*CombinedConfig).rustackManager()

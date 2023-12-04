@@ -30,7 +30,7 @@ func resourceRustackProjectCreate(ctx context.Context, d *schema.ResourceData, m
 	client_id := manager.ClientID
 	var client *rustack.Client
 	var err error
-	
+
 	if client_id != "" {
 		client, err = manager.GetClient(client_id)
 		if err != nil {
@@ -72,7 +72,12 @@ func resourceRustackProjectRead(ctx context.Context, d *schema.ResourceData, met
 	manager := meta.(*CombinedConfig).rustackManager()
 	project, err := manager.GetProject(d.Id())
 	if err != nil {
-		return diag.Errorf("id: Error getting project: %s", err)
+		if err.(*rustack.RustackApiError).Code() == 404 {
+			d.SetId("")
+			return nil
+		} else {
+			return diag.Errorf("id: Error getting project: %s", err)
+		}
 	}
 
 	d.SetId(project.ID)

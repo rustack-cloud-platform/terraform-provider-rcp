@@ -101,7 +101,12 @@ func resourceRustackS3StorageBucketRead(ctx context.Context, d *schema.ResourceD
 
 	bucket, err := s3.GetBucket(d.Id())
 	if err != nil {
-		return diag.Errorf("id: Error getting S3StorageBucket: %s", err)
+		if err.(*rustack.RustackApiError).Code() == 404 {
+			d.SetId("")
+			return nil
+		} else {
+			return diag.Errorf("id: Error getting S3StorageBucket: %s", err)
+		}
 	}
 
 	d.SetId(bucket.ID)

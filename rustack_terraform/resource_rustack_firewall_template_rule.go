@@ -73,7 +73,12 @@ func resourceRustackFirewallRuleRead(ctx context.Context, d *schema.ResourceData
 
 	firewallRule, err := firewall.GetRuleById(firewallRule_id)
 	if err != nil {
-		return diag.Errorf("id: Error getting fierwall Rule: %s", err)
+		if err.(*rustack.RustackApiError).Code() == 404 {
+			d.SetId("")
+			return nil
+		} else {
+			return diag.Errorf("id: Error getting fierwall Rule: %s", err)
+		}
 	}
 
 	d.SetId(firewallRule.ID)

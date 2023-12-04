@@ -3,8 +3,8 @@ package rustack_terraform
 import (
 	"context"
 	"log"
-	"time"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -38,7 +38,7 @@ func resourceRustackDnsCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	name := d.Get("name").(string)
 	newDns := rustack.NewDns(name)
-	if strings.HasSuffix(name, ".") == false{
+	if strings.HasSuffix(name, ".") == false {
 		return diag.Errorf("name: must be ending by '.'")
 	}
 
@@ -57,7 +57,12 @@ func resourceRustackDnsRead(ctx context.Context, d *schema.ResourceData, meta in
 	manager := meta.(*CombinedConfig).rustackManager()
 	Dns, err := manager.GetDns(d.Id())
 	if err != nil {
-		return diag.Errorf("id: Error getting Dns: %s", err)
+		if err.(*rustack.RustackApiError).Code() == 404 {
+			d.SetId("")
+			return nil
+		} else {
+			return diag.Errorf("id: Error getting Dns: %s", err)
+		}
 	}
 
 	d.SetId(Dns.ID)
