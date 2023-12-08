@@ -51,6 +51,16 @@ func (args *Arguments) injectCreateDns() {
 			ForceNew:    true,
 			Description: "id of the Project",
 		},
+		"tags": {
+			Type:     schema.TypeSet,
+			Optional: true,
+			ForceNew: true,
+			Elem: &schema.Schema{
+				Type:        schema.TypeString,
+				Description: "name of the Tag",
+			},
+			Description: "tags of the Dns",
+		},
 	})
 }
 

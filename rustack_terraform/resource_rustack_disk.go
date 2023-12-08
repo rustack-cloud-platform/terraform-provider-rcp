@@ -46,6 +46,7 @@ func resourceRustackDiskCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	newDisk := rustack.NewDisk(d.Get("name").(string), d.Get("size").(int), targetStorageProfile)
 	targetVdc.WaitLock()
+	newDisk.Tags = unmarshalTagNames(d.Get("tags"))
 	err = targetVdc.CreateDisk(&newDisk)
 	if err != nil {
 		return diag.Errorf("Error creating disk: %s", err)
@@ -73,6 +74,7 @@ func resourceRustackDiskRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.SetId(disk.ID)
 	d.Set("name", disk.Name)
 	d.Set("size", disk.Size)
+	d.Set("tags", marshalTagNames(disk.Tags))
 
 	return nil
 }
@@ -87,6 +89,11 @@ func resourceRustackDiskUpdate(ctx context.Context, d *schema.ResourceData, meta
 	shouldUpdate := false
 	if d.HasChange("name") {
 		disk.Name = d.Get("name").(string)
+		shouldUpdate = true
+	}
+
+	if d.HasChange("tags") {
+		disk.Tags = unmarshalTagNames(d.Get("tags"))
 		shouldUpdate = true
 	}
 

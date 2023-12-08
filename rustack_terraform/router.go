@@ -102,5 +102,6 @@ func (args *Arguments) injectCreateRouter() {
 			Default:     false,
 			Description: "Determinate if router is system.",
 		},
+		"tags": newTagNamesResourceSchema("tags of the router"),
 	})
 }

@@ -44,6 +44,7 @@ func (args *Arguments) injectCreatePort() {
 			Description: "list of firewall templates ids of the Port",
 			Elem:        &schema.Schema{Type: schema.TypeString},
 		},
+		"tags": newTagNamesResourceSchema("tags of the Port"),
 	})
 }
 

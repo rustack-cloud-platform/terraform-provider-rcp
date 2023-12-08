@@ -54,6 +54,7 @@ func (args *Arguments) injectCreateProject() {
 			),
 			Description: "name of the Project",
 		},
+		"tags": newTagNamesResourceSchema("tags of the Project"),
 	})
 }
 

@@ -78,6 +78,7 @@ func resourceRustackKubernetesCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	newKubernetes := rustack.NewKubernetes(name, cpu, ram, nodesCount, nodeDiskSize, floatingIp, template, storage_profile, pub_key.ID, platform)
+	newKubernetes.Tags = unmarshalTagNames(d.Get("tags"))
 
 	err = targetVdc.CreateKubernetes(&newKubernetes)
 	if err != nil {
@@ -113,6 +114,7 @@ func resourceRustackKubernetesRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("node_disk_size", Kubernetes.NodeDiskSize)
 	d.Set("platform", Kubernetes.NodePlatform.ID)
 	d.Set("template_id", Kubernetes.Template.ID)
+	d.Set("tags", marshalTagNames(Kubernetes.Tags))
 
 	vms := make([]*string, len(Kubernetes.Vms))
 	for i, vm := range Kubernetes.Vms {
@@ -162,7 +164,10 @@ func resourceRustackKubernetesUpdate(ctx context.Context, d *schema.ResourceData
 		needUpdate = true
 		kubernetes.Name = d.Get("name").(string)
 	}
-
+	if d.HasChange("tags") {
+		needUpdate = true
+		kubernetes.Tags = unmarshalTagNames(d.Get("tags"))
+	}
 	needUpdate = true
 	sp_id := d.Get("node_storage_profile_id").(string)
 	storage_profile, err := targetVdc.GetStorageProfile(sp_id)

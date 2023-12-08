@@ -15,6 +15,7 @@ resource "rustack_s3_storage" "s3_storage" {
     project_id = resource.rustack_project.single_project.id
     name = "s3_storage"
     backend = "minio" # or "netapp"
+    tags = ["created_by:terraform"]
 }
 ```
 
@@ -32,3 +33,4 @@ resource "rustack_s3_storage" "s3_storage" {
 - **client_endpoint** (Boolean) url for connecting to s3
 - **access_key** (String) access_key for connecting to s3
 - **secret_key** (String) secret_key for connecting to s3
+- **tags** (Toset, String) list of Tags added to the s3

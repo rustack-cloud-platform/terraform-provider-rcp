@@ -55,6 +55,7 @@ func resourceRustackLbaasCreate(ctx context.Context, d *schema.ResourceData, met
 	port := rustack.NewPort(network, firewalls, ipAddressStr)
 
 	newLbaas := rustack.NewLoadBalancer(d.Get("name").(string), vdc, &port, floatingIp)
+	newLbaas.Tags = unmarshalTagNames(d.Get("tags"))
 
 	err = vdc.Create(&newLbaas)
 	if err != nil {
@@ -90,6 +91,7 @@ func resourceRustackLbaasRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.Set("port", lbaasPort)
 	d.Set("vdc_id", lbaas.Vdc.ID)
+	d.Set("tags", marshalTagNames(lbaas.Tags))
 
 	return
 }
@@ -110,6 +112,9 @@ func resourceRustackLbaasUpdate(ctx context.Context, d *schema.ResourceData, met
 			lbaas.Floating = &rustack.Port{ID: "RANDOM_FIP"}
 		}
 		d.Set("floating", lbaas.Floating != nil)
+	}
+	if d.HasChange("tags") {
+		lbaas.Tags = unmarshalTagNames(d.Get("tags"))
 	}
 	lbaasPort := d.Get("port.0").(map[string]interface{})
 	ip_address := lbaasPort["ip_address"].(string)

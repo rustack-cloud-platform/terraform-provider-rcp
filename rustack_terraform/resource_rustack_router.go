@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"sort"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -33,7 +34,7 @@ func resourceRustackRouterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	var diagErr diag.Diagnostics
 	if d.Get("system").(bool) {
-		diagErr = setSetviceRouter(d, manager)
+		diagErr = setServiceRouter(d, manager)
 	} else {
 		diagErr = createRouter(d, manager)
 	}
@@ -72,6 +73,7 @@ func resourceRustackRouterRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.Set("ports", ports)
 	d.Set("vdc_id", router.Vdc.Id)
+	d.Set("tags", marshalTagNames(router.Tags))
 
 	return
 }
@@ -82,10 +84,19 @@ func resourceRustackRouterUpdate(ctx context.Context, d *schema.ResourceData, me
 	if err != nil {
 		return diag.Errorf("id: Error getting Router: %s", err)
 	}
-	router.Name = d.Get("name").(string)
-
+	shouldUpdate := false
 	if d.HasChange("name") {
-		router.Rename(d.Get("name").(string))
+		router.Name = d.Get("name").(string)
+		shouldUpdate = true
+	}
+	if d.HasChange("tags") {
+		router.Tags = unmarshalTagNames(d.Get("tags"))
+		shouldUpdate = true
+	}
+	if shouldUpdate {
+		if err := router.Update(); err != nil {
+			return diag.Errorf("error on router's update %s", err)
+		}
 	}
 
 	if err := syncFloating(d, router); err != nil {
@@ -162,7 +173,7 @@ func resourceRustackRouterDelete(ctx context.Context, d *schema.ResourceData, me
 	return nil
 }
 
-func setSetviceRouter(d *schema.ResourceData, manager *rustack.Manager) diag.Diagnostics {
+func setServiceRouter(d *schema.ResourceData, manager *rustack.Manager) diag.Diagnostics {
 	router, err := getSystemRouter(d, manager)
 	if err != nil {
 		return diag.FromErr(err)
@@ -211,7 +222,7 @@ func createRouter(d *schema.ResourceData, manager *rustack.Manager) (diagErr dia
 	}
 
 	router := rustack.NewRouter(d.Get("name").(string), floatingIp)
-
+	router.Tags = unmarshalTagNames(d.Get("tags"))
 	portsIds := d.Get("ports").(*schema.Set).List()
 	ports := make([]*rustack.Port, len(portsIds))
 
@@ -258,7 +269,31 @@ func getSystemRouter(d *schema.ResourceData, manager *rustack.Manager) (router *
 			break
 		}
 	}
+	if router == nil {
+		return nil, fmt.Errorf("ERROR: Default router not found in vdc %s", vdc.ID)
+	}
 	d.SetId(router.ID)
+	tags := unmarshalTagNames(d.Get("tags"))
+	shouldUpdate := false
+	if len(tags) != len(router.Tags) {
+		router.Tags = tags
+		shouldUpdate = true
+	} else {
+		sort.Slice(tags, func(i, j int) bool { return tags[i].Name < tags[j].Name })
+		sort.Slice(router.Tags, func(i, j int) bool { return tags[i].Name < tags[j].Name })
+		for i := 0; i < len(tags); i++ {
+			if tags[i].Name != router.Tags[i].Name {
+				router.Tags = tags
+				shouldUpdate = true
+				break
+			}
+		}
+	}
+	if shouldUpdate {
+		if err := router.Update(); err != nil {
+			return nil, err
+		}
+	}
 
 	err = syncRouterPorts(d, manager, router)
 	if err != nil {
@@ -268,7 +303,7 @@ func getSystemRouter(d *schema.ResourceData, manager *rustack.Manager) (router *
 	// Connect ports
 
 	portsIds := d.Get("ports").(*schema.Set).List()
-	ports := make([]*rustack.Port, len(portsIds))
+	ports := make([]*rustack.Port, 0, len(portsIds))
 
 	for _, portId := range portsIds {
 		port, err := manager.GetPort(portId.(string))

@@ -80,5 +80,6 @@ func (args *Arguments) injectCreateFirewallTemplate() {
 			),
 			Description: "name of the firewall template",
 		},
+		"tags": newTagNamesResourceSchema("tags of the firewall template"),
 	})
 }

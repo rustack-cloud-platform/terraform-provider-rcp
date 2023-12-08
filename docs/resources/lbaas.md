@@ -28,6 +28,7 @@ resource "rustack_lbaas" "lbaas" {
     port{
         network_id = data.rustack_network.new_network.id
     }
+    tags = ["created_by:terraform"]
 }
 
 ```
@@ -44,6 +45,7 @@ resource "rustack_lbaas" "lbaas" {
 ### Optional
 
 - **floating** (Boolean) enable floating ip for the LoadBalancer.
+- **tags** (Toset, String) list of Tags added to the LoadBalancer.
 - **timeouts** (Block, Optional)
 
 <a id="nestedblock--port"></a>

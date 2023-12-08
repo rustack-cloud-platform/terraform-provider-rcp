@@ -15,6 +15,7 @@ data "rustack_project" "single_project" {
 resource "rustack_dns" "dns" {
     name="dns.teraform."
     project_id = data.rustack_project.single_project.id
+    tags = ["created_by:terraform"]
 }
 ```
 
@@ -28,6 +29,7 @@ resource "rustack_dns" "dns" {
 ### Optional
 
 - **id** (String) The ID of this resource.
+- **tags** (Toset, String) list of Tags added to the Dns
 - **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 
 <a id="nestedblock--timeouts"></a>

@@ -54,7 +54,7 @@ func resourceRustackProjectCreate(ctx context.Context, d *schema.ResourceData, m
 	project := rustack.NewProject(
 		d.Get("name").(string),
 	)
-
+	project.Tags = unmarshalTagNames(d.Get("tags"))
 	log.Printf("[DEBUG] Project create request: %#v", project)
 	err = client.CreateProject(&project)
 	if err != nil {
@@ -82,6 +82,7 @@ func resourceRustackProjectRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(project.ID)
 	d.Set("name", project.Name)
+	d.Set("tags", marshalTagNames(project.Tags))
 
 	return nil
 }
@@ -94,7 +95,13 @@ func resourceRustackProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("id: Error getting project: %s", err)
 	}
 
-	err = project.Rename(d.Get("name").(string))
+	if d.HasChange("name") {
+		project.Name = d.Get("name").(string)
+	}
+	if d.HasChange("tags") {
+		project.Tags = unmarshalTagNames(d.Get("tags"))
+	}
+	err = project.Update()
 	if err != nil {
 		return diag.Errorf("name: Error rename project: %s", err)
 	}

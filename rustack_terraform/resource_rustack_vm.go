@@ -83,6 +83,7 @@ func resourceRustackVmCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	newVm := rustack.NewVm(vmName, cpu, ram, template, nil, &userData, ports,
 		systemDiskList, floatingIp)
+	newVm.Tags = unmarshalTagNames(d.Get("tags"))
 
 	err = targetVdc.CreateVm(&newVm)
 	if err != nil {
@@ -162,6 +163,7 @@ func resourceRustackVmRead(ctx context.Context, d *schema.ResourceData, meta int
 	if vm.Floating != nil {
 		d.Set("floating_ip", vm.Floating.IpAddress)
 	}
+	d.Set("tags", marshalTagNames(vm.Tags))
 
 	return nil
 }
@@ -208,6 +210,10 @@ func resourceRustackVmUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			vm.Floating = &rustack.Port{ID: "RANDOM_FIP"}
 		}
 		d.Set("floating", vm.Floating != nil)
+	}
+	if d.HasChange("tags") {
+		needUpdate = true
+		vm.Tags = unmarshalTagNames(d.Get("tags"))
 	}
 
 	if needUpdate {

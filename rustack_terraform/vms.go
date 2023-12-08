@@ -104,6 +104,7 @@ func (args *Arguments) injectCreateVm() {
 			Computed:    true,
 			Description: "floating ip for the Vm. May be omitted",
 		},
+		"tags": newTagNamesResourceSchema("tags of the Vm"),
 		"power": {
 			Type:        schema.TypeBool,
 			Optional:    true,

@@ -61,6 +61,7 @@ resource "rustack_kubernetes" "k8s" {
     node_storage_profile_id = data.rustack_storage_profile.ssd.id
     user_public_key_id = data.rustack_pub_key.key.id
     floating = true
+    tags = ["created_by:terraform"]
 }
 
 output "dashboard_url" {
@@ -88,12 +89,14 @@ output "dashboard_url" {
 
 - **floating** (Boolean) enable floating ip for the Kubernetes
 - **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
+- **tags** (Toset, String) list of Tags added to the Kubernetes.
 
 
 ### Read-Only
 
 - **floating_ip** (String) floating ip for the Vm. May be omitted
 - **id** (String) The ID of this resource.
+- **dashboard_url** (String) URL to access kubernetes dashboard
 
 ## Getting information about kubernetes
 

@@ -40,6 +40,7 @@ func resourceRustackFirewallTemplateCreate(ctx context.Context, d *schema.Resour
 	}
 
 	newFirewallTemplate := rustack.NewFirewallTemplate(d.Get("name").(string))
+	newFirewallTemplate.Tags = unmarshalTagNames(d.Get("tags"))
 	err = targetVdc.CreateFirewallTemplate(&newFirewallTemplate)
 	if err != nil {
 		return diag.Errorf("Error creating Firewall Template: %s", err)
@@ -65,6 +66,7 @@ func resourceRustackFirewallTemplateRead(ctx context.Context, d *schema.Resource
 
 	d.SetId(firewallTemplate.ID)
 	d.Set("name", firewallTemplate.Name)
+	d.Set("tags", marshalTagNames(firewallTemplate.Tags))
 
 	return nil
 }
@@ -78,9 +80,13 @@ func resourceRustackFirewallTemplateUpdate(ctx context.Context, d *schema.Resour
 	}
 
 	if d.HasChange("name") {
-		if err = firewallTemplate.Rename(d.Get("name").(string)); err != nil {
-			return diag.Errorf("name: Error rename Firewall Template: %s", err)
-		}
+		firewallTemplate.Name = d.Get("name").(string)
+	}
+	if d.HasChange("tags") {
+		firewallTemplate.Tags = unmarshalTagNames(d.Get("tags"))
+	}
+	if err = firewallTemplate.UpdateFirewallTemplate(); err != nil {
+		return diag.Errorf("name: Error rename Firewall Template: %s", err)
 	}
 
 	return resourceRustackFirewallTemplateRead(ctx, d, meta)

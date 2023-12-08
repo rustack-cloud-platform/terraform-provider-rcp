@@ -29,21 +29,30 @@ resource "rustack_firewall_template" "single_template" {
 resource "rustack_firewall_template" "single_template" {
   vdc_id = data.rustack_vdc.single_vdc.id
   name   = "New custom template"
+}
 
-  ingress_rule {
-    protocol       = "tcp"
-    port_range     = "80"
-    destination_ip = "2.0.0.0"
-  }
+resource "rustack_firewall_template_rule" "ingress1" {
+  firewall_id = resource.rustack_firewall_template.single_template.id
+  name = "ingress1"
+  direction = "ingress"
+  protocol = "tcp"
+  port_range = "80"
+  destination_ip = "2.0.0.0"
+}
 
-  ingress_rule {
-    protocol       = "icmp"
-    destination_ip = "1.0.0.0/24"
-  }
+resource "rustack_firewall_template_rule" "ingress2" {
+  firewall_id = resource.rustack_firewall_template.single_template.id
+  name = "ingress2"
+  direction = "ingress"
+  protocol = "icmp"
+  destination_ip = "1.0.0.0/24"
+}
 
-  egress_rule {
-    protocol       = "udp"
-    port_range     = "53"
-    destination_ip = "5.0.0.0/24"
-  }
+resource "rustack_firewall_template_rule" "egress1" {
+  firewall_id = resource.rustack_firewall_template.single_template.id
+  name = "egress1"
+  direction = "egress"
+  protocol = "udp"
+  port_range = "53"
+  destination_ip = "5.0.0.0/24"
 }

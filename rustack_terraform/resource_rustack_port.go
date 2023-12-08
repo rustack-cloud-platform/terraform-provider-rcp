@@ -59,6 +59,7 @@ func resourceRustackPortCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	log.Printf("[DEBUG] subnetInfo: %#v", targetVdc)
 	newPort := rustack.NewPort(portNetwork, firewalls, ipAddressStr)
+	newPort.Tags = unmarshalTagNames(d.Get("tags"))
 	fmt.Println(ipAddressStr)
 	targetVdc.WaitLock()
 	if err = targetVdc.CreateEmptyPort(&newPort); err != nil {
@@ -80,13 +81,14 @@ func resourceRustackPortRead(ctx context.Context, d *schema.ResourceData, meta i
 			d.SetId("")
 			return nil
 		} else {
-			return diag.Errorf("id: Error getting port: %s, '%d'", err)
+			return diag.Errorf("id: Error getting port: %s", err)
 		}
 	}
 
 	d.SetId(port.ID)
 	d.Set("ip_address", port.IpAddress)
 	d.Set("network_id", port.Network)
+	d.Set("tags", marshalTagNames(port.Tags))
 
 	firewalls := make([]*string, len(port.FirewallTemplates))
 	for i, firewall := range port.FirewallTemplates {
@@ -106,12 +108,12 @@ func resourceRustackPortUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if err != nil {
 		return diag.Errorf("id: Error getting port: %s", err)
 	}
+	if d.HasChange("tags") {
+		port.Tags = unmarshalTagNames(d.Get("tags"))
+	}
 	ip_address := d.Get("ip_address").(string)
-	if ip_address != *port.IpAddress {
-		err = port.UpdateIpAddress(&ip_address)
-		if err != nil {
-			return diag.Errorf("ip_address: Error updating ip_address: %s", err)
-		}
+	if d.HasChange("ip_address") {
+		port.IpAddress = &ip_address
 	}
 
 	if d.HasChange("firewall_templates") {
@@ -126,9 +128,10 @@ func resourceRustackPortUpdate(ctx context.Context, d *schema.ResourceData, meta
 			firewalls[j] = portFirewall
 		}
 
-		if err = port.UpdateFirewall(firewalls); err != nil {
-			return diag.FromErr(err)
-		}
+		port.FirewallTemplates = firewalls
+	}
+	if err := port.Update(); err != nil {
+		return diag.FromErr(err)
 	}
 	port.WaitLock()
 	return resourceRustackPortRead(ctx, d, meta)

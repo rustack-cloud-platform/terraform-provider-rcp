@@ -12,6 +12,7 @@ The Vdcs can be associated with a project:
 ```hcl
 resource "rustack_project" "demo_project" {
     name = "Terraform Project"
+    tags = ["created_by:terraform"]
 }
 ```
 
@@ -24,3 +25,4 @@ resource "rustack_project" "demo_project" {
 ### Optional
 
 - **id** (String) The ID of this resource.
+- **tags** (Toset, String) list of Tags added to the Project

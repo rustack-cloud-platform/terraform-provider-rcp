@@ -41,6 +41,7 @@ func resourceRustackDnsCreate(ctx context.Context, d *schema.ResourceData, meta 
 	if strings.HasSuffix(name, ".") == false {
 		return diag.Errorf("name: must be ending by '.'")
 	}
+	newDns.Tags = unmarshalTagNames(d.Get("tags"))
 
 	err = project.CreateDns(&newDns)
 	if err != nil {
@@ -68,6 +69,7 @@ func resourceRustackDnsRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.SetId(Dns.ID)
 	d.Set("name", Dns.Name)
 	d.Set("project", Dns.Project.ID)
+	d.Set("tags", marshalTagNames(Dns.Tags))
 
 	return nil
 }

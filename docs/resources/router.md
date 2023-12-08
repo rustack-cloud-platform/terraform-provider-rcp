@@ -41,6 +41,7 @@ resource "rustack_router" "new_router" {
     data.rustack_port.vm_port.id,
   ]
   floating = false
+  tags = ["created_by:terraform"]
 }
 
 ```
@@ -58,6 +59,7 @@ resource "rustack_router" "new_router" {
 - **system** (Bool) let terraform treat system router properly. False by default. There can be only 1 router with the system = ture
 - **floating** (Bool) enable floating ip for the Router. True by default.
 - **is_default** (Bool) Set up this option to set router by default.
+- **tags** (Toset, String) list of Tags added to the Router
 
 Read-Only:
 

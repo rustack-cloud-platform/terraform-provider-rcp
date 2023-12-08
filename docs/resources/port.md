@@ -44,6 +44,7 @@ resource "rustack_port" "router_port" {
     network_id = resource.rustack_network.network.id
     ip_address = "199.199.199.199"
     firewall_templates = [data.rustack_firewall_template.allow_default.id]
+    tags = ["created_by:terraform"]
 }
 ```
 
@@ -58,6 +59,7 @@ resource "rustack_port" "router_port" {
 
 - **firewall_templates** (List of String) list of firewall rule ids of the Port
 - **ip_address** (String) ip address of port
+- **tags** (Toset, String) list of Tags added to the Port.
 
 ### Read-Only
 

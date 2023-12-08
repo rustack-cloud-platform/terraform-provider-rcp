@@ -49,6 +49,7 @@ func (args *Arguments) injectCreateDisk() {
 			Required:    true,
 			Description: "the id of the StorageProfile",
 		},
+		"tags": newTagNamesResourceSchema("tags of the Vm"),
 	})
 }
 

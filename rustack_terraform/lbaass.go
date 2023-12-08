@@ -90,6 +90,7 @@ func (args *Arguments) injectCreateLbaas() {
 			Computed:    true,
 			Description: "floating ip for the Lbaas. May be comitted",
 		},
+		"tags": newTagNamesResourceSchema("tags of the Lbaas"),
 	})
 }
 
