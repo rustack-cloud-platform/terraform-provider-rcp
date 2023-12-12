@@ -30,7 +30,7 @@ func resourceRustackProjectCreate(ctx context.Context, d *schema.ResourceData, m
 	client_id := manager.ClientID
 	var client *rustack.Client
 	var err error
-	
+
 	if client_id != "" {
 		client, err = manager.GetClient(client_id)
 		if err != nil {
@@ -54,7 +54,7 @@ func resourceRustackProjectCreate(ctx context.Context, d *schema.ResourceData, m
 	project := rustack.NewProject(
 		d.Get("name").(string),
 	)
-
+	project.Tags = unmarshalTagNames(d.Get("tags"))
 	log.Printf("[DEBUG] Project create request: %#v", project)
 	err = client.CreateProject(&project)
 	if err != nil {
@@ -72,11 +72,17 @@ func resourceRustackProjectRead(ctx context.Context, d *schema.ResourceData, met
 	manager := meta.(*CombinedConfig).rustackManager()
 	project, err := manager.GetProject(d.Id())
 	if err != nil {
-		return diag.Errorf("id: Error getting project: %s", err)
+		if err.(*rustack.RustackApiError).Code() == 404 {
+			d.SetId("")
+			return nil
+		} else {
+			return diag.Errorf("id: Error getting project: %s", err)
+		}
 	}
 
 	d.SetId(project.ID)
 	d.Set("name", project.Name)
+	d.Set("tags", marshalTagNames(project.Tags))
 
 	return nil
 }
@@ -89,7 +95,13 @@ func resourceRustackProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("id: Error getting project: %s", err)
 	}
 
-	err = project.Rename(d.Get("name").(string))
+	if d.HasChange("name") {
+		project.Name = d.Get("name").(string)
+	}
+	if d.HasChange("tags") {
+		project.Tags = unmarshalTagNames(d.Get("tags"))
+	}
+	err = project.Update()
 	if err != nil {
 		return diag.Errorf("name: Error rename project: %s", err)
 	}

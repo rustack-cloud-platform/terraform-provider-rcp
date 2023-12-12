@@ -35,10 +35,9 @@ func resourceRustackLbaasCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	// create port
-	var floatingIp *string = nil
+	var floatingIp *rustack.Port = nil
 	if d.Get("floating").(bool) {
-		floatingIpStr := "RANDOM_FIP"
-		floatingIp = &floatingIpStr
+		floatingIp = &rustack.Port{ID: "RANDOM_FIP"}
 	}
 	portPrefix := "port.0"
 	lbaasPort := d.Get("port.0").(map[string]interface{})
@@ -56,6 +55,7 @@ func resourceRustackLbaasCreate(ctx context.Context, d *schema.ResourceData, met
 	port := rustack.NewPort(network, firewalls, ipAddressStr)
 
 	newLbaas := rustack.NewLoadBalancer(d.Get("name").(string), vdc, &port, floatingIp)
+	newLbaas.Tags = unmarshalTagNames(d.Get("tags"))
 
 	err = vdc.Create(&newLbaas)
 	if err != nil {
@@ -70,8 +70,12 @@ func resourceRustackLbaasRead(ctx context.Context, d *schema.ResourceData, meta 
 	manager := meta.(*CombinedConfig).rustackManager()
 	lbaas, err := manager.GetLoadBalancer(d.Id())
 	if err != nil {
-		diagErr = diag.Errorf("id: Error getting Lbaas: %s", err)
-		return
+		if err.(*rustack.RustackApiError).Code() == 404 {
+			d.SetId("")
+			return nil
+		} else {
+			return diag.Errorf("id: Error getting Lbaas: %s", err)
+		}
 	}
 	d.SetId(lbaas.ID)
 	d.Set("name", lbaas.Name)
@@ -82,11 +86,12 @@ func resourceRustackLbaasRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	lbaasPort := make([]interface{}, 1)
 	lbaasPort[0] = map[string]interface{}{
-		"ip_address":         lbaas.Port.IpAddress,
-		"network_id":         lbaas.Port.Network.ID,
+		"ip_address": lbaas.Port.IpAddress,
+		"network_id": lbaas.Port.Network.ID,
 	}
 	d.Set("port", lbaasPort)
 	d.Set("vdc_id", lbaas.Vdc.ID)
+	d.Set("tags", marshalTagNames(lbaas.Tags))
 
 	return
 }
@@ -107,6 +112,9 @@ func resourceRustackLbaasUpdate(ctx context.Context, d *schema.ResourceData, met
 			lbaas.Floating = &rustack.Port{ID: "RANDOM_FIP"}
 		}
 		d.Set("floating", lbaas.Floating != nil)
+	}
+	if d.HasChange("tags") {
+		lbaas.Tags = unmarshalTagNames(d.Get("tags"))
 	}
 	lbaasPort := d.Get("port.0").(map[string]interface{})
 	ip_address := lbaasPort["ip_address"].(string)

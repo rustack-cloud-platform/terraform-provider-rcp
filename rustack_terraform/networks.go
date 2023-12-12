@@ -107,6 +107,7 @@ func (args *Arguments) injectCreateNetwork() {
 				},
 			},
 		},
+		"tags": newTagNamesResourceSchema("tags of the Network"),
 	})
 }
 

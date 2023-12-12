@@ -29,6 +29,7 @@ resource "rustack_disk" "disk2" {
     name = "Disk 1"
     storage_profile_id = data.rustack_storage_profile.single_storage_profile.id
     size = 1
+    tags = ["created_by:terraform"]
 }
 ```
 
@@ -44,6 +45,7 @@ resource "rustack_disk" "disk2" {
 ### Optional
 
 - **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
+- **tags** (Toset, String) list of Tags added to the Disk.
 
 ### Read-Only
 

@@ -22,6 +22,7 @@ func (args *Arguments) injectCreateVdc() {
 			),
 			Description: "name of the VDC",
 		},
+		"tags": newTagNamesResourceSchema("tags of the VDC"),
 	})
 }
 

@@ -39,13 +39,14 @@ func resourceRustackDiskCreate(ctx context.Context, d *schema.ResourceData, meta
 		return diag.Errorf("vdc_id: Error getting VDC: %s", err)
 	}
 
-	targetStorageProfile, err := GetStorageProfileById(d, manager, targetVdc, nil)
+	targetStorageProfile, err := GetStorageProfileById(d.Get("storage_profile_id").(string), manager, targetVdc)
 	if err != nil {
 		return diag.Errorf("storage_profile: Error getting storage profile: %s", err)
 	}
 
 	newDisk := rustack.NewDisk(d.Get("name").(string), d.Get("size").(int), targetStorageProfile)
 	targetVdc.WaitLock()
+	newDisk.Tags = unmarshalTagNames(d.Get("tags"))
 	err = targetVdc.CreateDisk(&newDisk)
 	if err != nil {
 		return diag.Errorf("Error creating disk: %s", err)
@@ -62,12 +63,18 @@ func resourceRustackDiskRead(ctx context.Context, d *schema.ResourceData, meta i
 	manager := meta.(*CombinedConfig).rustackManager()
 	disk, err := manager.GetDisk(d.Id())
 	if err != nil {
-		return diag.Errorf("id: Error getting disk: %s", err)
+		if err.(*rustack.RustackApiError).Code() == 404 {
+			d.SetId("")
+			return nil
+		} else {
+			return diag.Errorf("id: Error getting disk: %s", err)
+		}
 	}
 
 	d.SetId(disk.ID)
 	d.Set("name", disk.Name)
 	d.Set("size", disk.Size)
+	d.Set("tags", marshalTagNames(disk.Tags))
 
 	return nil
 }
@@ -79,18 +86,27 @@ func resourceRustackDiskUpdate(ctx context.Context, d *schema.ResourceData, meta
 		return diag.Errorf("id: Error getting disk: %s", err)
 	}
 
+	shouldUpdate := false
 	if d.HasChange("name") {
-		err = disk.Rename(d.Get("name").(string))
-		if err != nil {
-			return diag.Errorf("name: Error rename disk: %s", err)
-		}
+		disk.Name = d.Get("name").(string)
+		shouldUpdate = true
+	}
+
+	if d.HasChange("tags") {
+		disk.Tags = unmarshalTagNames(d.Get("tags"))
+		shouldUpdate = true
 	}
 
 	if d.HasChange("size") {
+		disk.Size = d.Get("size").(int)
+		if disk.Locked {
+			disk.WaitLock()
+		}
 		err = disk.Resize(d.Get("size").(int))
 		if err != nil {
 			return diag.Errorf("size: Error resizing disk: %s", err)
 		}
+		shouldUpdate = false
 	}
 
 	if d.HasChange("storage_profile_id") {
@@ -99,18 +115,26 @@ func resourceRustackDiskUpdate(ctx context.Context, d *schema.ResourceData, meta
 			return diag.Errorf("Error getting VDC: %s", err)
 		}
 
-		targetStorageProfile, err := GetStorageProfileById(d, manager, targetVdc, nil)
+		targetStorageProfileId := d.Get("storage_profile_id").(string)
+		targetStorageProfile, err := GetStorageProfileById(targetStorageProfileId, manager, targetVdc)
 		if err != nil {
 			return diag.Errorf("storage_profile: Error getting storage profile: %s", err)
 		}
-
+		if disk.Locked {
+			disk.WaitLock()
+		}
 		err = disk.UpdateStorageProfile(*targetStorageProfile)
 		if err != nil {
 			return diag.Errorf("storage_profile: Error updating storage: %s", err)
 		}
+		shouldUpdate = false
 	}
-	
-	disk.WaitLock()
+	if shouldUpdate {
+		if disk.Locked {
+			disk.WaitLock()
+		}
+		disk.Update()
+	}
 
 	return resourceRustackDiskRead(ctx, d, meta)
 }

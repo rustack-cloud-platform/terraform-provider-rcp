@@ -65,6 +65,7 @@ func (args *Arguments) injectCreateS3Storage() {
 			Computed:    true,
 			Description: "secret_key for access to s3",
 		},
+		"tags": newTagNamesResourceSchema("tags of the s3"),
 	})
 }
 

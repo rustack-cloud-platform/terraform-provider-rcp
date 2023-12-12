@@ -18,9 +18,10 @@ data "rustack_vdc" "single_vdc" {
     name = "Terraform VDC"
 }
 
-data "rustack_firewall_template" "single_template" {
+resource "rustack_firewall_template" "single_template" {
   vdc_id = data.rustack_vdc.single_vdc.id
   name   = "New custom template"
+  tags = ["created_by:terraform"]
 }
 
 ```
@@ -29,19 +30,9 @@ data "rustack_firewall_template" "single_template" {
 
 ### Required
 
-- **name** (String) name of the Firewall
+- **name** (String) name of the FirewallTemplate
 - **vdc_id** (String) id of the VDC
 
 ### Optional
 
-- **ingress_rule** (Schema) Schema for ingress template rule.
-
-    **protocol** (String) udp/tcp/icmp protocols
-    **port_range** (String) You can set only one number or range like `80:90`
-    **destination_ip** (String) Destination Ip address 
-
-- **egress_rule** (Schema) Schema for egress template rule.
-
-    **protocol** (String) udp/tcp/icmp protocols
-    **port_range** (String) You can set only one number or range like `80:90`
-    **destination_ip** (String) Destination Ip address 
+- **tags** (Toset, String) list of Tags added to the FirewallTemplate

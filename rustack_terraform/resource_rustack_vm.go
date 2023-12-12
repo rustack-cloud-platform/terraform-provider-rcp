@@ -10,7 +10,6 @@ import (
 	"github.com/pilat/rustack-go/rustack"
 )
 
-
 func resourceRustackVm() *schema.Resource {
 	args := Defaults()
 	args.injectCreateVm()
@@ -84,6 +83,7 @@ func resourceRustackVmCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	newVm := rustack.NewVm(vmName, cpu, ram, template, nil, &userData, ports,
 		systemDiskList, floatingIp)
+	newVm.Tags = unmarshalTagNames(d.Get("tags"))
 
 	err = targetVdc.CreateVm(&newVm)
 	if err != nil {
@@ -114,12 +114,16 @@ func resourceRustackVmCreate(ctx context.Context, d *schema.ResourceData, meta i
 	return resourceRustackVmRead(ctx, d, meta)
 }
 
-func resourceRustackVmRead(ctx context.Context, d *schema.ResourceData, meta interface{}) (diagErr diag.Diagnostics) {
+func resourceRustackVmRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	manager := meta.(*CombinedConfig).rustackManager()
 	vm, err := manager.GetVm(d.Id())
 	if err != nil {
-		diagErr = diag.Errorf("id: Error getting vm: %s", err)
-		return
+		if err.(*rustack.RustackApiError).Code() == 404 {
+			d.SetId("")
+			return nil
+		} else {
+			return diag.Errorf("id: Error getting vm: %s", err)
+		}
 	}
 
 	d.SetId(vm.ID)
@@ -159,8 +163,9 @@ func resourceRustackVmRead(ctx context.Context, d *schema.ResourceData, meta int
 	if vm.Floating != nil {
 		d.Set("floating_ip", vm.Floating.IpAddress)
 	}
+	d.Set("tags", marshalTagNames(vm.Tags))
 
-	return
+	return nil
 }
 
 func resourceRustackVmUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -205,6 +210,10 @@ func resourceRustackVmUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			vm.Floating = &rustack.Port{ID: "RANDOM_FIP"}
 		}
 		d.Set("floating", vm.Floating != nil)
+	}
+	if d.HasChange("tags") {
+		needUpdate = true
+		vm.Tags = unmarshalTagNames(d.Get("tags"))
 	}
 
 	if needUpdate {
@@ -258,7 +267,7 @@ func resourceRustackVmDelete(ctx context.Context, d *schema.ResourceData, meta i
 			return diag.FromErr(err)
 		}
 	}
-	
+
 	portsIds := d.Get("ports").(*schema.Set).List()
 	for _, portId := range portsIds {
 		port, err := manager.GetPort(portId.(string))

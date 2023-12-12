@@ -30,6 +30,7 @@ resource "rustack_network" "network2" {
         end_ip = "10.20.1.254"
         dns = ["8.8.8.8", "8.8.4.4", "1.1.1.1"]
     }
+    tags = ["created_by:terraform"]
 }
 ```
 
@@ -44,6 +45,7 @@ resource "rustack_network" "network2" {
 ### Optional
 
 - **id** (String) The ID of this resource.
+- **tags** (Toset, String) list of Tags added to the Network.
 
 <a id="nestedblock--subnets"></a>
 ### Nested Schema for `subnets`

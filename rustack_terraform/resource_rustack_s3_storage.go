@@ -40,6 +40,7 @@ func resourceRustackS3StorageCreate(ctx context.Context, d *schema.ResourceData,
 	name := d.Get("name").(string)
 	backend := d.Get("backend").(string)
 	newS3Storage := rustack.NewS3Storage(name, backend)
+	newS3Storage.Tags = unmarshalTagNames(d.Get("tags"))
 
 	err = project.CreateS3Storage(&newS3Storage)
 	if err != nil {
@@ -60,6 +61,9 @@ func resourceRustackS3StorageUpdate(ctx context.Context, d *schema.ResourceData,
 	if d.HasChange("name") {
 		s3.Name = d.Get("name").(string)
 	}
+	if d.HasChange("tags") {
+		s3.Tags = unmarshalTagNames(d.Get("tags"))
+	}
 
 	err = s3.Update()
 	if err != nil {
@@ -75,7 +79,12 @@ func resourceRustackS3StorageRead(ctx context.Context, d *schema.ResourceData, m
 	manager := meta.(*CombinedConfig).rustackManager()
 	S3Storage, err := manager.GetS3Storage(d.Id())
 	if err != nil {
-		return diag.Errorf("id: Error getting S3Storage: %s", err)
+		if err.(*rustack.RustackApiError).Code() == 404 {
+			d.SetId("")
+			return nil
+		} else {
+			return diag.Errorf("id: Error getting S3Storage: %s", err)
+		}
 	}
 
 	d.SetId(S3Storage.ID)
@@ -85,6 +94,7 @@ func resourceRustackS3StorageRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("client_endpoint", S3Storage.ClientEndpoint)
 	d.Set("secret_key", S3Storage.SecretKey)
 	d.Set("access_key", S3Storage.AccessKey)
+	d.Set("tags", marshalTagNames(S3Storage.Tags))
 
 	return nil
 }

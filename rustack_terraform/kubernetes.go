@@ -104,6 +104,7 @@ func (args *Arguments) injectCreateKubernetes() {
 			Computed:    true,
 			Description: "Kubernetes dashboard url",
 		},
+		"tags": newTagNamesResourceSchema("tags of the Kubernetes"),
 	})
 }
 

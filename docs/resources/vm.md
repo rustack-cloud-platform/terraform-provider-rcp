@@ -85,6 +85,7 @@ resource "rustack_vm" "vm1" {
     }
 
     floating = false
+    tags = ["created_by:terraform"]
 }
 ```
 
@@ -107,6 +108,7 @@ resource "rustack_vm" "vm1" {
 - **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 - **disks** (Toset, String) list of Disks id attached to the Vm.
 - **power** (Boolean) the vm state
+- **tags** (Toset, String) list of Tags added to the Vm
 
 
 ### Read-Only

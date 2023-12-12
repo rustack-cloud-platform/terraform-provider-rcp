@@ -26,7 +26,6 @@ func resourceRustackNetwork() *schema.Resource {
 	}
 }
 
-
 func resourceRustackNetworkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	manager := meta.(*CombinedConfig).rustackManager()
 	targetVdc, err := GetVdcById(d, manager)
@@ -36,7 +35,7 @@ func resourceRustackNetworkCreate(ctx context.Context, d *schema.ResourceData, m
 
 	log.Printf("[DEBUG] subnetInfo: %#v", targetVdc)
 	network := rustack.NewNetwork(d.Get("name").(string))
-
+	network.Tags = unmarshalTagNames(d.Get("tags"))
 	targetVdc.WaitLock()
 	if err = targetVdc.CreateNetwork(&network); err != nil {
 		return diag.Errorf("Error creating network: %s", err)
@@ -58,10 +57,16 @@ func resourceRustackNetworkRead(ctx context.Context, d *schema.ResourceData, met
 	manager := meta.(*CombinedConfig).rustackManager()
 	network, err := manager.GetNetwork(d.Id())
 	if err != nil {
-		return diag.Errorf("id: Error getting network: %s", err)
+		if err.(*rustack.RustackApiError).Code() == 404 {
+			d.SetId("")
+			return nil
+		} else {
+			return diag.Errorf("id: Error getting network: %s", err)
+		}
 	}
 
 	d.Set("name", network.Name)
+	d.Set("tags", marshalTagNames(network.Tags))
 
 	subnets, err := network.GetSubnets()
 	if err != nil {
@@ -99,11 +104,20 @@ func resourceRustackNetworkUpdate(ctx context.Context, d *schema.ResourceData, m
 	if err != nil {
 		return diag.Errorf("id: Error getting network: %s", err)
 	}
+	shouldUpdate := false
+	if d.HasChange("tags") {
+		network.Tags = unmarshalTagNames(d.Get("tags"))
+		shouldUpdate = true
+	}
 
 	if d.HasChange("name") {
-		err = network.Rename(d.Get("name").(string))
+		network.Name = d.Get("name").(string)
+		shouldUpdate = true
+	}
+	if shouldUpdate {
+		err := network.Update()
 		if err != nil {
-			return diag.Errorf("name: Error rename network: %s", err)
+			return diag.Errorf("name: Error update network: %s", err)
 		}
 	}
 

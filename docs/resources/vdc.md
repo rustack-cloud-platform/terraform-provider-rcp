@@ -36,6 +36,7 @@ resource "rustack_vdc" "vdc1" {
 
 - **id** (String) The ID of this resource.
 - **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
+- **tags** (Toset, String) list of Tags added to the VDC.
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`

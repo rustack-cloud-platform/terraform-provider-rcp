@@ -47,17 +47,3 @@ resource "rustack_firewall_template_rule" "rule_1" {
 
 > for protocols **tcp** and **udp** parameters are required to
   **port_range** (String) The range of ports can be only a single **number** and **{number}:{number}** or can be empty 
-
-### Optional
-
-- **ingress_rule** (Schema) Schema for ingress template rule.
-
-    **protocol** (String) udp/tcp/icmp protocols
-    **port_range** (String) You can set only one number or range like `80:90`
-    **destination_ip** (String) Destination Ip address 
-
-- **egress_rule** (Schema) Schema for egress template rule.
-
-    **protocol** (String) udp/tcp/icmp protocols
-    **port_range** (String) You can set only one number or range like `80:90`
-    **destination_ip** (String) Destination Ip address 
