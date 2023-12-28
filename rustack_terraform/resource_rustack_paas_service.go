@@ -52,13 +52,6 @@ func resourceRustackPaasService() *schema.Resource {
 				ForceNew:    true,
 				Description: "inputs of Paas Service as JSON object",
 			},
-			// "paas_service_inputs": {
-			// 	Type:        schema.TypeMap,
-			// 	Required:    true,
-			// 	ForceNew:    true,
-			// 	StateFunc:   func(i interface{}) string { return "" },
-			// 	Description: "inputs of Paas Service",
-			// },
 		},
 	}
 }
