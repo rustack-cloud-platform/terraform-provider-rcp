@@ -12,7 +12,6 @@ func dataSourceRustackPort() *schema.Resource {
 	args := Defaults()
 	args.injectContextVdcById()
 	args.injectResultPort()
-	args.injectContextPortByIp() // override name
 
 	return &schema.Resource{
 		ReadContext: dataSourceRustackPortRead,

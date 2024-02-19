@@ -1,6 +1,8 @@
 package rustack_terraform
 
 import (
+	"regexp"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -41,6 +43,7 @@ func (args *Arguments) injectCreateDns() {
 			ForceNew: true,
 			ValidateFunc: validation.All(
 				validation.NoZeroValues,
+				validation.StringMatch(regexp.MustCompile(`\.$`), "DNS name must end by dot"),
 				validation.StringLenBetween(1, 255),
 			),
 			Description: "name of the Dns",
