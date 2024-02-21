@@ -58,6 +58,9 @@ func resourceRustackS3StorageUpdate(ctx context.Context, d *schema.ResourceData,
 	manager := meta.(*CombinedConfig).rustackManager()
 
 	s3, err := manager.GetS3Storage(d.Id())
+	if err != nil {
+		return diag.Errorf("Error getting S3Storage: %s", err)
+	}
 	if d.HasChange("name") {
 		s3.Name = d.Get("name").(string)
 	}

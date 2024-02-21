@@ -1,29 +1,11 @@
 package rustack_terraform
 
 import (
+	"regexp"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
-
-func (args *Arguments) injectContextPortById() {
-	args.merge(Arguments{
-		"id": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "id of the port",
-		},
-	})
-}
-
-func (args *Arguments) injectContextPortByIp() {
-	args.merge(Arguments{
-		"ip_address": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "",
-			Description: "ip_address of the Port",
-		},
-	})
-}
 
 func (args *Arguments) injectCreatePort() {
 	args.injectContextNetworkById()
@@ -34,6 +16,10 @@ func (args *Arguments) injectCreatePort() {
 			Optional:    true,
 			Computed:    true,
 			Description: "ip_address of the Port",
+			ValidateFunc: validation.All(
+				validation.StringIsNotEmpty,
+				validation.StringDoesNotMatch(regexp.MustCompile(`^0\.0\.0\.0`), "remove ip_address to choose random IP"),
+			),
 		},
 		"firewall_templates": {
 			Type:        schema.TypeSet,
@@ -50,6 +36,7 @@ func (args *Arguments) injectResultPort() {
 	args.merge(Arguments{
 		"id": {
 			Type:        schema.TypeString,
+			Optional:    true,
 			Computed:    true,
 			Description: "id of the Port",
 		},
@@ -59,23 +46,38 @@ func (args *Arguments) injectResultPort() {
 			Description: "id of the Network",
 		},
 		"ip_address": {
-			Type:        schema.TypeString,
-			Computed:    true,
-			Description: "ip_address of the Port",
+			Type:         schema.TypeString,
+			Optional:     true,
+			Computed:     true,
+			Description:  "ip_address of the Port",
+			ExactlyOneOf: []string{"id"},
 		},
 	})
 }
 
 func (args *Arguments) injectResultListPort() {
-	portSchema := Defaults()
-	portSchema.injectResultPort()
-
 	args.merge(Arguments{
 		"ports": {
 			Type:     schema.TypeList,
 			Computed: true,
 			Elem: &schema.Resource{
-				Schema: portSchema,
+				Schema: Arguments{
+					"id": {
+						Type:        schema.TypeString,
+						Computed:    true,
+						Description: "id of the Port",
+					},
+					"network": {
+						Type:        schema.TypeString,
+						Computed:    true,
+						Description: "id of the Network",
+					},
+					"ip_address": {
+						Type:        schema.TypeString,
+						Computed:    true,
+						Description: "ip_address of the Port",
+					},
+				},
 			},
 		},
 	})

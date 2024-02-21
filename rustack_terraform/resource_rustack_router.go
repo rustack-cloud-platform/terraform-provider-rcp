@@ -363,6 +363,9 @@ func syncRouterPorts(d *schema.ResourceData, manager *rustack.Manager, router *r
 				port.WaitLock()
 			}
 			port, err = manager.GetPort(portId.(string))
+			if err != nil {
+				return fmt.Errorf("ERROR: Cannot get port `%s`: %s", portId, err)
+			}
 			log.Printf("Port `%s` will be Attached", port.ID)
 			if err := router.ConnectPort(port, true); err != nil {
 				return fmt.Errorf("ERROR: Cannot attach port `%s`: %s", port.ID, err)

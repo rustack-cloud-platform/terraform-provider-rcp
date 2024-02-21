@@ -38,7 +38,7 @@ func resourceRustackDnsCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	name := d.Get("name").(string)
 	newDns := rustack.NewDns(name)
-	if strings.HasSuffix(name, ".") == false {
+	if !strings.HasSuffix(name, ".") {
 		return diag.Errorf("name: must be ending by '.'")
 	}
 	newDns.Tags = unmarshalTagNames(d.Get("tags"))

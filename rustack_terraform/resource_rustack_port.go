@@ -40,6 +40,9 @@ func resourceRustackPortCreate(ctx context.Context, d *schema.ResourceData, meta
 		return diag.Errorf("vdc_id: Error getting VDC: %s", err)
 	}
 	portNetwork, err := GetNetworkById(d, manager, nil)
+	if err != nil {
+		return diag.Errorf("Error getting network: %s", err)
+	}
 
 	firewallsCount := d.Get("firewall_templates.#").(int)
 	firewalls := make([]*rustack.FirewallTemplate, firewallsCount)
@@ -52,8 +55,11 @@ func resourceRustackPortCreate(ctx context.Context, d *schema.ResourceData, meta
 		firewalls[j] = portFirewall
 	}
 
-	ipAddressStr := d.Get("ip_address").(string)
-	if ipAddressStr == "" {
+	ipAddressInterface, ok := d.GetOk("ip_address")
+	var ipAddressStr string
+	if ok {
+		ipAddressStr = ipAddressInterface.(string)
+	} else {
 		ipAddressStr = "0.0.0.0"
 	}
 

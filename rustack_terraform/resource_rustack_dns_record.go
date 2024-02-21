@@ -41,7 +41,7 @@ func resourceRustackDnsRecordCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	host := d.Get("host").(string)
-	if strings.HasSuffix(host, dns.Name) == false {
+	if !strings.HasSuffix(host, dns.Name) {
 		return diag.Errorf("host: must be ending by '%s'", dns.Name)
 	}
 
