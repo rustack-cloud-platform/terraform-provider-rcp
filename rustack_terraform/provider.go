@@ -68,6 +68,7 @@ func Provider() *schema.Provider {
 			"rustack_pub_key":              dataSourceRustackPublicKey(),           // 030-resource-get-pub-key +
 			"rustack_platform":             dataSourceRustackPlatform(),            // 030-resource-get-platform +
 			"rustack_platforms":            dataSourceRustackPlatforms(),           // 030-resource-get-platforms +
+			"rustack_paas_template":        dataSourceRustackPaasTemplate(),
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
@@ -87,6 +88,7 @@ func Provider() *schema.Provider {
 			"rustack_s3_storage":             resourceRustackS3Storage(),        // 029-resource-create-s3-storage +
 			"rustack_s3_storage_bucket":      resourceRustackS3StorageBucket(),  // 029-resource-create-s3-storage-bucket +
 			"rustack_kubernetes":             resourceRustackKubernetes(),       // 030-resource-create-rustack-kubernetes +
+			"rustack_paas_service":           resourceRustackPaasService(),
 		},
 	}
 
@@ -95,7 +97,7 @@ func Provider() *schema.Provider {
 		if terraformVersion == "" {
 			// Terraform 0.12 introduced this field to the protocol
 			// We can therefore assume that if it's missing it's 0.10 or 0.11
-			terraformVersion = "0.11+compatible"
+			terraformVersion = "1.6"
 		}
 		return providerConfigure(d, terraformVersion)
 	}
