@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pilat/rustack-go/rustack"
 	"github.com/pkg/errors"
+	"github.com/rustack-cloud-platform/rcp-go/rustack"
 )
 
 type Arguments map[string]*schema.Schema

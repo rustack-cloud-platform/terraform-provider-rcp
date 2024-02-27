@@ -5,7 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pilat/rustack-go/rustack"
+	"github.com/rustack-cloud-platform/rcp-go/rustack"
 )
 
 func dataSourceRustackPublicKey() *schema.Resource {
@@ -41,9 +41,9 @@ func dataSourceRustackPublicKeyRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	flatten := map[string]interface{}{
-		"id":   targetPublicKey.ID,
-		"name": targetPublicKey.Name,
-		"public_key": targetPublicKey.Fingerprint,
+		"id":          targetPublicKey.ID,
+		"name":        targetPublicKey.Name,
+		"public_key":  targetPublicKey.Fingerprint,
 		"fingerprint": targetPublicKey.PublicKey,
 	}
 
