@@ -5,7 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pilat/rustack-go/rustack"
+	"github.com/rustack-cloud-platform/rcp-go/rustack"
 )
 
 func dataSourceRustackVdc() *schema.Resource {
@@ -33,7 +33,7 @@ func dataSourceRustackVdcRead(ctx context.Context, d *schema.ResourceData, meta 
 
 		targetProject = project
 	}
-	
+
 	target, err := checkDatasourceNameOrId(d)
 	if err != nil {
 		return diag.Errorf("Error getting VDC: %s", err)

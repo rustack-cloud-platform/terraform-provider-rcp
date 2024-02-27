@@ -2,7 +2,7 @@ package rustack_terraform
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/pilat/rustack-go/rustack"
+	"github.com/rustack-cloud-platform/rcp-go/rustack"
 )
 
 func marshalTagNames(tags []rustack.Tag) []interface{} {

@@ -7,8 +7,8 @@ toolchain go1.21.1
 require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.30.0
 	github.com/mitchellh/hashstructure/v2 v2.0.2
-	github.com/pilat/rustack-go v0.2.8
 	github.com/pkg/errors v0.9.1
+	github.com/rustack-cloud-platform/rcp-go v0.2.9
 	github.com/sirupsen/logrus v1.9.3
 )
 
