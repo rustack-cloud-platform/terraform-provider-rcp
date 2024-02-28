@@ -42,6 +42,13 @@ func dataSourceRustackVmRead(ctx context.Context, d *schema.ResourceData, meta i
 			return diag.Errorf("Error getting vm: %s", err)
 		}
 	}
+	flattenPorts := make([]map[string]interface{}, 0, len(targetVm.Ports))
+	for _, port := range targetVm.Ports {
+		flattenPorts = append(flattenPorts, map[string]interface{}{
+			"id":         port.ID,
+			"ip_address": port.IpAddress,
+		})
+	}
 
 	flatten := map[string]interface{}{
 		"id":            targetVm.ID,
@@ -53,6 +60,7 @@ func dataSourceRustackVmRead(ctx context.Context, d *schema.ResourceData, meta i
 		"power":         targetVm.Power,
 		"floating":      nil,
 		"floating_ip":   nil,
+		"ports":         flattenPorts,
 	}
 
 	if targetVm.Floating != nil {
