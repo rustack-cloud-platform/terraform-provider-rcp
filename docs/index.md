@@ -14,7 +14,7 @@ Use the navigation to the left to read about the available resources.
 terraform {
   required_providers {
     rustack = {
-      source  = "pilat/rustack"
+      source  = "rustack-cloud-platform/rcp"
     }
   }
 }

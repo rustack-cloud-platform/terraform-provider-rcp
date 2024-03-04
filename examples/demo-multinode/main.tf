@@ -3,7 +3,7 @@ terraform {
 
     required_providers {
         rustack = {
-            source  = "pilat/rustack"
+            source  = "rustack-cloud-platform/rcp"
             version = "~> 0.1"
         }
     }

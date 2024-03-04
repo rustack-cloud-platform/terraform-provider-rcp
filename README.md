@@ -1,7 +1,7 @@
 Rustack Terraform Provider
 ==================
 
-- Documentation: https://registry.terraform.io/providers/pilat/rustack/latest/docs
+- Documentation: https://registry.terraform.io/providers/rustack-cloud-platform/rcp/latest/docs
 
 Requirements
 ------------
@@ -12,4 +12,4 @@ Requirements
 Using the provider
 ----------------------
 
-See the [Rustack Provider documentation in terraform registry](https://registry.terraform.io/providers/pilat/rustack/latest/docs) or [Rustack Provider documentation in knowledge base](https://kb.rustack.ru/products/rustack-esu/terraform/documentation) to get started using the Rustack provider.
+See the [Rustack Provider documentation in terraform registry](https://registry.terraform.io/providers/rustack-cloud-platform/rcp/latest/docs) or [Rustack Provider documentation in knowledge base](https://kb.rustack.ru/products/rustack-esu/terraform/documentation) to get started using the Rustack provider.

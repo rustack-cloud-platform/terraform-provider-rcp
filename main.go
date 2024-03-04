@@ -5,7 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
-	"github.com/pilat/terraform-provider-rustack/rustack_terraform"
+	"github.com/rustack-cloud-platform/terraform-provider-rcp/rustack_terraform"
 )
 
 func main() {
