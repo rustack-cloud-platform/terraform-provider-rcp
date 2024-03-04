@@ -34,8 +34,6 @@ func (args *Arguments) injectContextLbaasByID() {
 }
 
 func (args *Arguments) injectLbaasPort() {
-	args.injectContextNetworkById()
-
 	args.merge(Arguments{
 		"network_id": {
 			Type:        schema.TypeString,

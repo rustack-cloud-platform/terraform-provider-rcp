@@ -8,9 +8,13 @@ import (
 )
 
 func (args *Arguments) injectCreatePort() {
-	args.injectContextNetworkById()
-
 	args.merge(Arguments{
+		"network_id": {
+			Type:        schema.TypeString,
+			ForceNew:    true,
+			Required:    true,
+			Description: "id of the Network",
+		},
 		"ip_address": {
 			Type:        schema.TypeString,
 			Optional:    true,

@@ -29,6 +29,13 @@ func resourceRustackVdc() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 		Schema: args,
+		CustomizeDiff: func(ctx context.Context, rd *schema.ResourceDiff, i interface{}) error {
+			if rd.Id() != "" && !rd.HasChange("project_id") {
+				rd.Clear("id")
+				rd.Clear("default_network_id")
+			}
+			return nil
+		},
 	}
 }
 
@@ -72,13 +79,45 @@ func resourceRustackVdcRead(ctx context.Context, d *schema.ResourceData, meta in
 			return diag.Errorf("id: Error getting vdc: %s", err)
 		}
 	}
-
-	flattenedProject := map[string]interface{}{
-		"name":       vdc.Name,
-		"project_id": vdc.Project.ID,
+	networks, err := vdc.GetNetworks(rustack.Arguments{"defaults_only": "true"})
+	if err != nil {
+		return diag.Errorf("error getting default network: %s", err)
+	}
+	if len(networks) != 1 {
+		return diag.Errorf("expected 1 default network, receive %d default networks", len(networks))
+	}
+	network := networks[0]
+	subnets, err := network.GetSubnets()
+	if err != nil {
+		return diag.Errorf("subnets: Error getting subnets: %s", err)
 	}
 
-	if err := setResourceDataFromMap(d, flattenedProject); err != nil {
+	flattenedSubnets := make([]map[string]interface{}, len(subnets))
+	for i, subnet := range subnets {
+		dnsStrings := make([]string, len(subnet.DnsServers))
+		for i2, dns := range subnet.DnsServers {
+			dnsStrings[i2] = dns.DNSServer
+		}
+		flattenedSubnets[i] = map[string]interface{}{
+			"id":       subnet.ID,
+			"cidr":     subnet.CIDR,
+			"dhcp":     subnet.IsDHCP,
+			"gateway":  subnet.Gateway,
+			"start_ip": subnet.StartIp,
+			"end_ip":   subnet.EndIp,
+			"dns":      dnsStrings,
+		}
+	}
+	flattenedVdc := map[string]interface{}{
+		"name":                    vdc.Name,
+		"project_id":              vdc.Project.ID,
+		"default_network_id":      network.ID,
+		"default_network_name":    network.Name,
+		"default_network_subnets": flattenedSubnets,
+		"tags":                    marshalTagNames(vdc.Tags),
+	}
+
+	if err := setResourceDataFromMap(d, flattenedVdc); err != nil {
 		return diag.FromErr(err)
 	}
 
