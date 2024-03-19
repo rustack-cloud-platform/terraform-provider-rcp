@@ -49,6 +49,11 @@ func (args *Arguments) injectCreateDisk() {
 			Required:    true,
 			Description: "the id of the StorageProfile",
 		},
+		"external_id": {
+			Type:        schema.TypeString,
+			Computed:    true,
+			Description: "external id of the volume. It can be empty",
+		},
 		"tags": newTagNamesResourceSchema("tags of the Vm"),
 	})
 }
@@ -79,6 +84,11 @@ func (args *Arguments) injectResultDisk() {
 			Type:        schema.TypeString,
 			Computed:    true,
 			Description: "the name of the StorageProfile",
+		},
+		"external_id": {
+			Type:        schema.TypeString,
+			Computed:    true,
+			Description: "external id of the volume. It can be empty",
 		},
 	})
 }

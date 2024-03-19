@@ -142,6 +142,7 @@ func resourceRustackVmRead(ctx context.Context, d *schema.ResourceData, meta int
 				"name":               "Основной диск",
 				"size":               disk.Size,
 				"storage_profile_id": disk.StorageProfile.ID,
+				"external_id":        disk.ExternalID,
 			}
 
 			d.Set("system_disk", systemDisk)

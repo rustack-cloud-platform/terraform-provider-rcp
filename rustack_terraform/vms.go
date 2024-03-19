@@ -199,5 +199,10 @@ func (args *Arguments) injectSystemDisk() {
 			Type:     schema.TypeString,
 			Required: true,
 		},
+		"external_id": {
+			Type:        schema.TypeString,
+			Computed:    true,
+			Description: "external id of the volume. It can be empty",
+		},
 	})
 }

@@ -74,6 +74,7 @@ func resourceRustackDiskRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.SetId(disk.ID)
 	d.Set("name", disk.Name)
 	d.Set("size", disk.Size)
+	d.Set("external_id", disk.ExternalID)
 	d.Set("tags", marshalTagNames(disk.Tags))
 
 	return nil
