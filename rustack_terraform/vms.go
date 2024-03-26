@@ -86,12 +86,37 @@ func (args *Arguments) injectCreateVm() {
 			Elem:        &schema.Schema{Type: schema.TypeString},
 		},
 		"ports": {
-			Type:        schema.TypeSet,
+			Type:        schema.TypeList,
 			Optional:    true,
+			Computed:    true,
 			MinItems:    1,
 			MaxItems:    10,
 			Description: "List of Ports connected to the Vm",
+			Deprecated:  "Use networks instead of ports",
 			Elem:        &schema.Schema{Type: schema.TypeString},
+		},
+		"networks": {
+			Type:         schema.TypeList,
+			Optional:     true,
+			Computed:     true,
+			ExactlyOneOf: []string{"ports", "networks"},
+			MinItems:     1,
+			MaxItems:     10,
+			Description:  "List of Ports connected to the Vm",
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"id": {
+						Type:        schema.TypeString,
+						Required:    true,
+						Description: "Id of the Port",
+					},
+					"ip_address": {
+						Type:        schema.TypeString,
+						Computed:    true,
+						Description: "IP of the Port",
+					},
+				},
+			},
 		},
 		"floating": {
 			Type:        schema.TypeBool,
@@ -162,6 +187,25 @@ func (args *Arguments) injectResultVm() {
 			Default:     true,
 			Description: "power of vw on/off",
 		},
+		"ports": {
+			Type:        schema.TypeList,
+			Computed:    true,
+			Description: "List of Ports connected to the Vm",
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"id": {
+						Type:        schema.TypeString,
+						Computed:    true,
+						Description: "Id of the Port",
+					},
+					"ip_address": {
+						Type:        schema.TypeString,
+						Computed:    true,
+						Description: "IP of the Port",
+					},
+				},
+			},
+		},
 	})
 }
 
@@ -198,6 +242,11 @@ func (args *Arguments) injectSystemDisk() {
 		"storage_profile_id": {
 			Type:     schema.TypeString,
 			Required: true,
+		},
+		"external_id": {
+			Type:        schema.TypeString,
+			Computed:    true,
+			Description: "external id of the volume. It can be empty",
 		},
 	})
 }

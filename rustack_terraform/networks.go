@@ -5,17 +5,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func (args *Arguments) injectContextNetworkById() {
-	args.merge(Arguments{
-		"network_id": {
-			Type:        schema.TypeString,
-			ForceNew:    true,
-			Required:    true,
-			Description: "id of the Network",
-		},
-	})
-}
-
 func (args *Arguments) injectContextGetNetwork() {
 	args.merge(Arguments{
 		"name": {

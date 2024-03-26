@@ -22,6 +22,61 @@ func (args *Arguments) injectCreateVdc() {
 			),
 			Description: "name of the VDC",
 		},
+		"default_network_id": {
+			Type:        schema.TypeString,
+			Computed:    true,
+			Description: "id of the Network",
+		},
+		"default_network_name": {
+			Type:        schema.TypeString,
+			Computed:    true,
+			Description: "name of the Network",
+		},
+		"default_network_subnets": {
+			Type:        schema.TypeList,
+			Computed:    true,
+			Description: "list of subnets",
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"id": {
+						Type:        schema.TypeString,
+						Computed:    true,
+						Description: "id of the Subnet",
+					},
+					"cidr": {
+						Type:        schema.TypeString,
+						Computed:    true,
+						Description: "cidr of the Subnet",
+					},
+					"gateway": {
+						Type:        schema.TypeString,
+						Computed:    true,
+						Description: "gateway of the Subnet",
+					},
+					"start_ip": {
+						Type:        schema.TypeString,
+						Computed:    true,
+						Description: "pool start ip of the Subnet",
+					},
+					"end_ip": {
+						Type:        schema.TypeString,
+						Computed:    true,
+						Description: "pool end ip of the Subnet",
+					},
+					"dhcp": {
+						Type:        schema.TypeBool,
+						Computed:    true,
+						Description: "enable dhcp service of the Subnet",
+					},
+					"dns": {
+						Type:        schema.TypeList,
+						Computed:    true,
+						Elem:        &schema.Schema{Type: schema.TypeString},
+						Description: "dns servers list",
+					},
+				},
+			},
+		},
 		"tags": newTagNamesResourceSchema("tags of the VDC"),
 	})
 }

@@ -50,6 +50,7 @@ func dataSourceRustackDiskRead(ctx context.Context, d *schema.ResourceData, meta
 		"size":                 targetDisk.Size,
 		"storage_profile_id":   targetDisk.StorageProfile.ID,
 		"storage_profile_name": targetDisk.StorageProfile.Name,
+		"external_id":          targetDisk.ExternalID,
 	}
 
 	if err := setResourceDataFromMap(d, flatten); err != nil {

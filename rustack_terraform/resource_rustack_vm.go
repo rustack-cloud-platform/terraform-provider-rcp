@@ -32,6 +32,24 @@ func resourceRustackVm() *schema.Resource {
 	}
 }
 
+func getVmPortsIds(d *schema.ResourceData) (portsIds []string) {
+	if d.HasChange("ports") {
+		portsIdsValue := d.Get("ports").([]interface{})
+		portsIds = make([]string, 0, len(portsIdsValue))
+		for _, portIdValue := range portsIdsValue {
+			portsIds = append(portsIds, portIdValue.(string))
+		}
+	} else {
+		networks := d.Get("networks").([]interface{})
+		portsIds = make([]string, 0, len(networks))
+		for _, network := range networks {
+			portMap := network.(map[string]interface{})
+			portsIds = append(portsIds, portMap["id"].(string))
+		}
+	}
+	return
+}
+
 func resourceRustackVmCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	manager := meta.(*CombinedConfig).rustackManager()
 	targetVdc, err := GetVdcById(d, manager)
@@ -64,17 +82,15 @@ func resourceRustackVmCreate(ctx context.Context, d *schema.ResourceData, meta i
 	newDisk := rustack.NewDisk("Основной диск", diskSize, storageProfile)
 	systemDiskList[0] = &newDisk
 
-	portsIds := d.Get("ports").(*schema.Set).List()
+	portsIds := getVmPortsIds(d)
 	ports := make([]*rustack.Port, len(portsIds))
-
 	for i, portId := range portsIds {
-		port, err := manager.GetPort(portId.(string))
+		port, err := manager.GetPort(portId)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 		ports[i] = port
 	}
-
 	var floatingIp *string = nil
 	if d.Get("floating").(bool) {
 		floatingIpStr := "RANDOM_FIP"
@@ -142,6 +158,7 @@ func resourceRustackVmRead(ctx context.Context, d *schema.ResourceData, meta int
 				"name":               "Основной диск",
 				"size":               disk.Size,
 				"storage_profile_id": disk.StorageProfile.ID,
+				"external_id":        disk.ExternalID,
 			}
 
 			d.Set("system_disk", systemDisk)
@@ -151,12 +168,17 @@ func resourceRustackVmRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	d.Set("disks", flattenDisks)
 
-	flatteports := make([]string, len(vm.Ports))
+	flattenPorts := make([]string, len(vm.Ports))
+	flattenNetworks := make([]map[string]interface{}, 0, len(vm.Ports))
 	for i, port := range vm.Ports {
-		flatteports[i] = port.ID
+		flattenPorts[i] = port.ID
+		flattenNetworks = append(flattenNetworks, map[string]interface{}{
+			"id":         port.ID,
+			"ip_address": port.IpAddress,
+		})
 	}
-
-	d.Set("ports", flatteports)
+	d.Set("ports", flattenPorts)
+	d.Set("networks", flattenNetworks)
 
 	d.Set("floating", vm.Floating != nil)
 	d.Set("floating_ip", "")
@@ -224,12 +246,13 @@ func resourceRustackVmUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 	if needPowerOn {
 		vm.PowerOn()
-	}
-	a := d.Get("power").(bool)
-	if a {
-		vm.PowerOn()
-	} else {
-		vm.PowerOff()
+	} else if d.HasChange("power") {
+		a := d.Get("power").(bool)
+		if a {
+			vm.PowerOn()
+		} else {
+			vm.PowerOff()
+		}
 	}
 
 	if diags := syncDisks(d, manager, targetVdc, vm); diags.HasError() {
@@ -268,16 +291,15 @@ func resourceRustackVmDelete(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	portsIds := d.Get("ports").(*schema.Set).List()
+	portsIds := getVmPortsIds(d)
 	for _, portId := range portsIds {
-		port, err := manager.GetPort(portId.(string))
+		port, err := manager.GetPort(portId)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 		if err := vm.DisconnectPort(port); err != nil {
 			return diag.FromErr(err)
 		}
-
 	}
 	vm.WaitLock()
 
@@ -360,9 +382,7 @@ func syncPorts(d *schema.ResourceData, manager *rustack.Manager, vdc *rustack.Vd
 }
 
 func ConnectNewPort(d *schema.ResourceData, manager *rustack.Manager, vm *rustack.Vm) (diagErr diag.Diagnostics) {
-	portsIds := d.Get("ports").(*schema.Set).List()
-	vm_id := vm.ID
-
+	portsIds := getVmPortsIds(d)
 	for _, portId := range portsIds {
 		found := false
 		for _, port := range vm.Ports {
@@ -373,13 +393,13 @@ func ConnectNewPort(d *schema.ResourceData, manager *rustack.Manager, vm *rustac
 		}
 
 		if !found {
-			port, err := manager.GetPort(portId.(string))
+			port, err := manager.GetPort(portId)
 
 			if err != nil {
 				diagErr = diag.FromErr(err)
 				return
 			}
-			if port.Connected != nil && port.Connected.ID != vm_id {
+			if port.Connected != nil && port.Connected.ID != vm.ID {
 
 				if err := vm.DisconnectPort(port); err != nil {
 					return diag.FromErr(err)
@@ -397,10 +417,8 @@ func ConnectNewPort(d *schema.ResourceData, manager *rustack.Manager, vm *rustac
 	return
 }
 
-func DisconnectOldPort(d *schema.ResourceData, manager *rustack.Manager, vm *rustack.Vm) (diagErr diag.Diagnostics) {
-	portsIds := d.Get("ports").(*schema.Set).List()
-	vm_id := vm.ID
-
+func DisconnectOldPort(d *schema.ResourceData, manager *rustack.Manager, vm *rustack.Vm) diag.Diagnostics {
+	portsIds := getVmPortsIds(d)
 	for _, port := range vm.Ports {
 		found := false
 		for _, portId := range portsIds {
@@ -410,7 +428,7 @@ func DisconnectOldPort(d *schema.ResourceData, manager *rustack.Manager, vm *rus
 			}
 		}
 		if !found {
-			if port.Connected != nil && port.Connected.ID == vm_id {
+			if port.Connected != nil && port.Connected.ID == vm.ID {
 				log.Printf("Port %s found on vm and not mentioned in the state."+
 					" Port will be detached", port.ID)
 
@@ -422,7 +440,7 @@ func DisconnectOldPort(d *schema.ResourceData, manager *rustack.Manager, vm *rus
 		}
 	}
 
-	return
+	return nil
 }
 
 func attachNewDisk(d *schema.ResourceData, manager *rustack.Manager, vm *rustack.Vm) (diagErr diag.Diagnostics) {
