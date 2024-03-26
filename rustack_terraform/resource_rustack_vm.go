@@ -246,12 +246,13 @@ func resourceRustackVmUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 	if needPowerOn {
 		vm.PowerOn()
-	}
-	a := d.Get("power").(bool)
-	if a {
-		vm.PowerOn()
-	} else {
-		vm.PowerOff()
+	} else if d.HasChange("power") {
+		a := d.Get("power").(bool)
+		if a {
+			vm.PowerOn()
+		} else {
+			vm.PowerOff()
+		}
 	}
 
 	if diags := syncDisks(d, manager, targetVdc, vm); diags.HasError() {
