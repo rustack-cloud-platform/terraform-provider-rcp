@@ -71,6 +71,7 @@ func dataSourceRustackNetworkRead(ctx context.Context, d *schema.ResourceData, m
 	flatten := map[string]interface{}{
 		"id":      targetNetwork.ID,
 		"subnets": flatten2,
+		"mtu":     targetNetwork.Mtu,
 	}
 
 	if err := setResourceDataFromMap(d, flatten); err != nil {
