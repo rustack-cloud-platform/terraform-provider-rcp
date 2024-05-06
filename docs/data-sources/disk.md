@@ -39,5 +39,6 @@ data "rustack_disk" "single_disk" {
 - **size** (Integer) the size of the Disk in gigabytes
 - **storage_profile_id** (String) the id of the StorageProfile
 - **storage_profile_name** (String) the name of the StorageProfile
+- **external_id** (String) the external id of the Disk used at hypervisor
 
 

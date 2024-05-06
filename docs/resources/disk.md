@@ -50,6 +50,7 @@ resource "rustack_disk" "disk2" {
 ### Read-Only
 
 - **id** (String) id of the Disk
+- **external_id** (String) the external id of the Disk used at hypervisor
 
 Optional:
 

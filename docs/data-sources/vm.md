@@ -48,3 +48,15 @@ data "rustack_vm" "single_vm" {
 - **template_id** (String) id of the Template
 - **template_name** (String) name of the Template
 - **power** (Boolean) the vm state
+- **ports** (Block List)    (see [below for nested schema](#nestedblock--port))
+
+<a id="nestedblock--port"></a>
+### Nested Schema for `port`
+
+Required:
+
+- **id** (String) id of the Port
+
+Read-Only:
+
+- **ip_address** (String) IP of the Port

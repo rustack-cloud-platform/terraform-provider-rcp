@@ -37,6 +37,13 @@ resource "rustack_vdc" "vdc1" {
 - **id** (String) The ID of this resource.
 - **timeouts** (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
 - **tags** (Toset, String) list of Tags added to the VDC.
+- **default_network_mtu** (Integer) maximum transmission unit for the default network of the vdc
+
+### Read-only
+
+- **default_network_id** (String) id of the default network of the vdc
+- **default_network_name** (String) name of the default network of the vdc
+- **default_network_subnets** (Block List) (see [below for nested schema](#nestedblock--subnets))
 
 <a id="nestedblock--timeouts"></a>
 ### Nested Schema for `timeouts`
@@ -45,3 +52,16 @@ Optional:
 
 - **create** (String)
 - **delete** (String)
+
+<a id="nestedblock--subnets"></a>
+### Nested Schema for `subnets`
+
+Read-Only:
+
+- **cidr** (String)
+- **dhcp** (Boolean)
+- **dns** (List of String)
+- **end_ip** (String)
+- **gateway** (String)
+- **id** (String)
+- **start_ip** (String)

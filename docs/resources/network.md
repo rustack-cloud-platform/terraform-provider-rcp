@@ -46,6 +46,7 @@ resource "rustack_network" "network2" {
 
 - **id** (String) The ID of this resource.
 - **tags** (Toset, String) list of Tags added to the Network.
+- **mtu** (Integer) maximum transmission unit for the Network
 
 <a id="nestedblock--subnets"></a>
 ### Nested Schema for `subnets`
