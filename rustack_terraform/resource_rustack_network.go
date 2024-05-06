@@ -36,6 +36,12 @@ func resourceRustackNetworkCreate(ctx context.Context, d *schema.ResourceData, m
 	log.Printf("[DEBUG] subnetInfo: %#v", targetVdc)
 	network := rustack.NewNetwork(d.Get("name").(string))
 	network.Tags = unmarshalTagNames(d.Get("tags"))
+	if mtu, ok := d.GetOk("mtu"); ok {
+		mtuValue := mtu.(int)
+		network.Mtu = &mtuValue
+	} else {
+		network.Mtu = nil
+	}
 	targetVdc.WaitLock()
 	if err = targetVdc.CreateNetwork(&network); err != nil {
 		return diag.Errorf("Error creating network: %s", err)
@@ -67,6 +73,7 @@ func resourceRustackNetworkRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.Set("name", network.Name)
 	d.Set("tags", marshalTagNames(network.Tags))
+	d.Set("mtu", network.Mtu)
 
 	subnets, err := network.GetSubnets()
 	if err != nil {
@@ -112,6 +119,15 @@ func resourceRustackNetworkUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	if d.HasChange("name") {
 		network.Name = d.Get("name").(string)
+		shouldUpdate = true
+	}
+	if d.HasChange("mtu") {
+		if mtu, ok := d.GetOk("mtu"); ok {
+			mtuValue := mtu.(int)
+			network.Mtu = &mtuValue
+		} else {
+			network.Mtu = nil
+		}
 		shouldUpdate = true
 	}
 	if shouldUpdate {

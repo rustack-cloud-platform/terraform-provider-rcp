@@ -62,6 +62,23 @@ func resourceRustackVdcCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	vdc.WaitLock()
+	if mtu, ok := d.GetOk("default_network_mtu"); ok {
+		networks, err := vdc.GetNetworks(rustack.Arguments{"defaults_only": "true"})
+		if err != nil {
+			return diag.Errorf("Error getting vdc networks: %s", err)
+		}
+		if len(networks) != 1 {
+			return diag.Errorf("Expected 1 network, got %d networks", len(networks))
+		}
+		network := networks[0]
+		mtuValue := mtu.(int)
+		network.Mtu = &mtuValue
+		err = network.Update()
+		if err != nil {
+			return diag.Errorf("Error updating vdc default network: %s", err)
+		}
+	}
+	vdc.GetNetworks()
 	d.SetId(vdc.ID)
 	log.Printf("[INFO] VDC created, ID: %s", d.Id())
 
@@ -114,6 +131,7 @@ func resourceRustackVdcRead(ctx context.Context, d *schema.ResourceData, meta in
 		"default_network_id":      network.ID,
 		"default_network_name":    network.Name,
 		"default_network_subnets": flattenedSubnets,
+		"default_network_mtu":     network.Mtu,
 		"tags":                    marshalTagNames(vdc.Tags),
 	}
 
@@ -144,6 +162,27 @@ func resourceRustackVdcUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	err = vdc.Update()
 	if err != nil {
 		return diag.Errorf("name: Error rename vdc: %s", err)
+	}
+	if d.HasChange("default_network_mtu") {
+		networks, err := vdc.GetNetworks(rustack.Arguments{"defaults_only": "true"})
+		if err != nil {
+			return diag.Errorf("Error getting vdc networks: %s", err)
+		}
+		if len(networks) != 1 {
+			return diag.Errorf("Expected 1 network, got %d networks", len(networks))
+		}
+		network := networks[0]
+
+		if mtu, ok := d.GetOk("default_network_mtu"); ok {
+			mtuValue := mtu.(int)
+			network.Mtu = &mtuValue
+		} else {
+			network.Mtu = nil
+		}
+		err = network.Update()
+		if err != nil {
+			return diag.Errorf("Error updating vdc default network: %s", err)
+		}
 	}
 
 	vdc.WaitLock()

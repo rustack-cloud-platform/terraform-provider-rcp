@@ -96,6 +96,11 @@ func (args *Arguments) injectCreateNetwork() {
 				},
 			},
 		},
+		"mtu": {
+			Type:     schema.TypeInt,
+			Optional: true,
+			Computed: true,
+		},
 		"tags": newTagNamesResourceSchema("tags of the Network"),
 	})
 }
