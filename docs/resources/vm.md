@@ -97,6 +97,7 @@ resource "rustack_vm" "vm1" {
 - **system_disk** System disk (Min: 1, Max: 1).   (see [below for nested schema](#nestedblock--system_disk))
 - **name** (String) name of the Vm
 - **ports** (List of String) list of Ports id attached to the Vm. 
+- **networks** (Block List)    (see [below for nested schema](#nestedblock--network))
 - **ram** (Float) memory of the Vm in gigabytes
 - **template_id** (String) id of the Template
 - **user_data** (String) script for cloud-init
@@ -132,3 +133,15 @@ Read-Only:
 
 - **id** (String) id of the Disk
 - **name** (String) name of the Disk
+
+
+<a id="nestedblock--network"></a>
+### Nested Schema for `network`
+
+Required:
+
+- **id** (String) id of the Port
+
+Read-Only:
+
+- **ip_address** (String) IP of the Port
