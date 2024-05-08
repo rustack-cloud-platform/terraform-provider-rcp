@@ -117,6 +117,11 @@ func (args *Arguments) injectResultNetwork() {
 			Computed:    true,
 			Description: "name of the Network",
 		},
+		"mtu": {
+			Type:        schema.TypeInt,
+			Computed:    true,
+			Description: "mtu of the Network",
+		},
 		"subnets": {
 			Type:        schema.TypeList,
 			Computed:    true,

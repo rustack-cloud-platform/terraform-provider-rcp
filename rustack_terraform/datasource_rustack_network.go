@@ -70,6 +70,7 @@ func dataSourceRustackNetworkRead(ctx context.Context, d *schema.ResourceData, m
 
 	flatten := map[string]interface{}{
 		"id":      targetNetwork.ID,
+		"name":    targetNetwork.Name,
 		"subnets": flatten2,
 		"mtu":     targetNetwork.Mtu,
 	}
