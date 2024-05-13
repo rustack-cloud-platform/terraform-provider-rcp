@@ -213,35 +213,71 @@ func updateSubnet(d *schema.ResourceData, manager *rustack.Manager) (diagErr dia
 
 	for _, subnetInfo := range subnets {
 		subnetInfo2 := subnetInfo.(map[string]interface{})
-		for _, subnet := range subnetsRaw {
-			if subnet.ID == subnetInfo2["id"] {
-				if subnet.Gateway != subnetInfo2["gateway"] || subnet.StartIp != subnetInfo2["start_ip"] || subnet.EndIp != subnetInfo2["end_ip"] {
-					return diag.Errorf("You cannot change params (gateway, start_ip, end_ip)")
-				}
-				newDHCPValue := subnetInfo2["dhcp"].(bool)
-				if subnet.IsDHCP != newDHCPValue {
-					if newDHCPValue {
-						err = subnet.EnableDHCP()
-						if err != nil {
-							return diag.Errorf("dhcp: Unable to toggle DHCP: %s", err)
-						}
-					} else {
-						err = subnet.DisableDHCP()
-						if err != nil {
-							return diag.Errorf("dhcp: Unable to toggle DHCP: %s", err)
-						}
+		var subnet *rustack.Subnet
+		for _, currentSubnet := range subnetsRaw {
+			if currentSubnet.CIDR == subnetInfo2["cidr"] {
+				subnet = currentSubnet
+				break
+			}
+		}
+		dnsServersList := subnetInfo2["dns"].([]interface{})
+		newDnsServers := make([]*rustack.SubnetDNSServer, len(dnsServersList))
+		for i, dns := range dnsServersList {
+			s1 := rustack.NewSubnetDNSServer(dns.(string))
+			newDnsServers[i] = &s1
+		}
+		if subnet == nil {
+			// create new subnet
+			newSubnet := rustack.NewSubnet(subnetInfo2["cidr"].(string), subnetInfo2["gateway"].(string), subnetInfo2["start_ip"].(string), subnetInfo2["end_ip"].(string), subnetInfo2["dhcp"].(bool))
+			if err := network.CreateSubnet(&newSubnet); err != nil {
+				return diag.Errorf("subnets: Error creating subnet: %s", err)
+			}
+			if err := subnet.UpdateDNSServers(newDnsServers); err != nil {
+				return diag.Errorf("dns: Error Update DNS Servers: %s", err)
+			}
+		} else {
+			// update preserved subnet
+			shouldUpdate := false
+			if subnet.Gateway != subnetInfo2["gateway"] {
+				return diag.Errorf("You cannot change gateway")
+			}
+			if subnet.StartIp != subnetInfo2["start_ip"] || subnet.EndIp != subnetInfo2["end_ip"] || subnet.IsDHCP != subnetInfo2["dhcp"] {
+				subnet.EndIp = subnetInfo2["end_ip"].(string)
+				subnet.StartIp = subnetInfo2["start_ip"].(string)
+				subnet.IsDHCP = subnetInfo2["dhcp"].(bool)
+				shouldUpdate = true
+			}
+			if len(subnet.DnsServers) != len(newDnsServers) {
+				subnet.DnsServers = newDnsServers
+				shouldUpdate = true
+			} else {
+				for i, oldDns := range subnet.DnsServers {
+					if oldDns.DNSServer != newDnsServers[i].DNSServer {
+						subnet.DnsServers = newDnsServers
+						shouldUpdate = true
+						break
 					}
 				}
-
-				// Set DNS again
-				dnsServersList := subnetInfo2["dns"].([]interface{})
-				dnsServers := make([]*rustack.SubnetDNSServer, len(dnsServersList))
-				for i, dns := range dnsServersList {
-					s1 := rustack.NewSubnetDNSServer(dns.(string))
-					dnsServers[i] = &s1
+			}
+			if shouldUpdate {
+				if err := subnet.UpdateDNSServers(subnet.DnsServers); err != nil {
+					return diag.Errorf("error update subnet: %s", err)
 				}
-
-				subnet.UpdateDNSServers(dnsServers)
+			}
+		}
+	}
+	for _, subnet := range subnetsRaw {
+		var subnetInfo2 map[string]interface{}
+		for _, subnetInfo := range subnets {
+			subnetInfo2 = subnetInfo.(map[string]interface{})
+			if subnet.CIDR == subnetInfo2["cidr"] {
+				break
+			}
+		}
+		if subnetInfo2 == nil {
+			// delete obsolete subnet
+			if err := subnet.Delete(); err != nil {
+				return diag.Errorf("error deleting subnet: %s", err)
 			}
 		}
 	}
