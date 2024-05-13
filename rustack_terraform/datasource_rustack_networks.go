@@ -60,6 +60,7 @@ func dataSourceRustackNetworksRead(ctx context.Context, d *schema.ResourceData, 
 		flattenedRecords[i] = map[string]interface{}{
 			"id":      network.ID,
 			"name":    network.Name,
+			"mtu":     network.Mtu,
 			"subnets": flattenRecords2,
 		}
 	}
